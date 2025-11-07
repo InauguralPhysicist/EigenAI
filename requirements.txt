@@ -1,0 +1,15 @@
+# Core dependencies for EigenAI
+
+# Numerical computing
+numpy>=1.24.0
+
+# Optional: NLP parsing (for production LRV extraction)
+# spacy>=3.5.0
+# en-core-web-sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.5.0/en_core_web_sm-3.5.0.tar.gz
+
+# Optional: Visualization
+# matplotlib>=3.7.0
+# pandas>=2.0.0
+
+# Optional: Testing
+# pytest>=7.3.0
