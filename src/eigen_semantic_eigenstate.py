@@ -29,7 +29,7 @@ from typing import List, Optional, Tuple, Dict
 from dataclasses import dataclass
 from collections import defaultdict
 
-from eigen_semantic_transformer import (
+from src.eigen_semantic_transformer import (
     SemanticGeometricTransformer,
     SemanticState,
     compute_grammatical_score,
