@@ -27,6 +27,40 @@ import numpy as np
 from typing import List, Tuple, Dict, Optional
 from dataclasses import dataclass
 
+# Constants for embedding initialization
+MAX_NOISE_DIMENSIONS = 100  # Maximum dimensions to add noise to
+NOISE_SCALE = 0.1  # Scale factor for random noise
+SIGNAL_STRENGTH = 1.0  # Strong signal at key positions
+
+
+def _initialize_embedding_vector(embedding_dim: int, signal_position: int) -> np.ndarray:
+    """
+    Initialize an embedding vector with noise and a strong signal at a specific position.
+
+    Parameters
+    ----------
+    embedding_dim : int
+        Total dimension of the embedding vector
+    signal_position : int
+        Position to place the strong signal
+
+    Returns
+    -------
+    vec : np.ndarray
+        Initialized vector with noise + signal
+
+    Notes
+    -----
+    This creates a vector with:
+    - Small random noise in the first MAX_NOISE_DIMENSIONS
+    - A strong signal (SIGNAL_STRENGTH) at signal_position
+    """
+    vec = np.zeros(embedding_dim)
+    noise_size = min(MAX_NOISE_DIMENSIONS, embedding_dim)
+    vec[:noise_size] = np.random.randn(noise_size) * NOISE_SCALE
+    vec[signal_position] = SIGNAL_STRENGTH
+    return vec
+
 
 @dataclass
 class SemanticTriad:
@@ -115,24 +149,23 @@ def extract_LRV_from_sentence(sentence: str,
     # Simplified extraction using word positions
     words = sentence.lower().split()
 
-    # Simple one-hot-like encoding based on position
+    # Initialize vectors with zeros
     L = np.zeros(embedding_dim)
     R = np.zeros(embedding_dim)
     V = np.zeros(embedding_dim)
 
-    # Heuristic: first third = L, middle third = R, last third = V
-    # Add small random component for diversity
+    # Heuristic: Distribute signals across embedding space
+    # L (Lexical) = beginning (position 0)
+    # R (Relational) = middle (position embedding_dim//3)
+    # V (Value) = end (position 2*embedding_dim//3)
     if len(words) >= 1:
-        L[:min(100, embedding_dim)] = np.random.randn(min(100, embedding_dim)) * 0.1
-        L[0] = 1.0  # Strong signal for first position
+        L = _initialize_embedding_vector(embedding_dim, signal_position=0)
 
     if len(words) >= 2:
-        R[:min(100, embedding_dim)] = np.random.randn(min(100, embedding_dim)) * 0.1
-        R[embedding_dim//3] = 1.0  # Strong signal for middle
+        R = _initialize_embedding_vector(embedding_dim, signal_position=embedding_dim // 3)
 
     if len(words) >= 3:
-        V[:min(100, embedding_dim)] = np.random.randn(min(100, embedding_dim)) * 0.1
-        V[2*embedding_dim//3] = 1.0  # Strong signal for end
+        V = _initialize_embedding_vector(embedding_dim, signal_position=2 * embedding_dim // 3)
 
     return SemanticTriad(L=L, R=R, V=V, text=sentence)
 

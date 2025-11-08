@@ -17,6 +17,14 @@ from typing import List, Tuple, Dict, Optional
 from dataclasses import dataclass
 import hashlib
 
+# Constants for discrete geometry
+BYTE_MAX = 256  # Maximum value for a single byte (0-255)
+BITS_PER_BYTE = 8  # Number of bits in a byte
+NUM_COMPONENTS = 4  # Number of components in state (L, R, V, M)
+TOTAL_BITS = NUM_COMPONENTS * BITS_PER_BYTE  # Total bits in state (32)
+PHASE_SECTORS = 8  # Number of 45° phase sectors (8 × 45° = 360°)
+MAX_PERIOD = 8  # Maximum period to check for cycles (matches PHASE_SECTORS)
+
 
 @dataclass
 class DiscreteToken:
@@ -177,7 +185,7 @@ def compute_change_stability(state_prev: Tuple[int,int,int,int],
         Metric signature S² - C²
     """
     C = compute_hamming_distance(state_prev, state_curr)
-    S = 32 - C  # Total 32 bits (4 bytes × 8 bits)
+    S = TOTAL_BITS - C  # Total bits in state (4 bytes × 8 bits each)
     ds2 = S * S - C * C
 
     return C, S, ds2
@@ -211,8 +219,8 @@ def detect_cycle_in_trajectory(trajectory: List[Tuple[int,int,int,int]],
     if len(trajectory) < 4:
         return None
 
-    # Check for periods 2 through min(8, len//2)
-    for period in range(2, min(9, len(trajectory) // 2 + 1)):
+    # Check for periods 2 through min(MAX_PERIOD, len//2)
+    for period in range(2, min(MAX_PERIOD + 1, len(trajectory) // 2 + 1)):
         is_periodic = True
 
         for offset in range(period):
@@ -343,7 +351,7 @@ def compute_temporal_phase(state: Tuple[int,int,int,int]) -> int:
     """
     Compute temporal coordinate (which 45° sector)
 
-    Maps state to one of 8 phases based on M value
+    Maps state to one of PHASE_SECTORS phases based on M value
     (since 8 × 45° = 360° closure)
 
     Parameters
@@ -357,8 +365,8 @@ def compute_temporal_phase(state: Tuple[int,int,int,int]) -> int:
         Phase sector (0-7)
     """
     M = state[3]
-    # Map M byte (0-255) to phase (0-7)
-    phase = (M * 8) // 256
+    # Map M byte (0-255) to phase sector (0-7)
+    phase = (M * PHASE_SECTORS) // BYTE_MAX
     return phase
 
 
@@ -376,13 +384,13 @@ def compute_spatial_pattern(trajectory: List[Tuple[int,int,int,int]]) -> np.ndar
 
     Returns
     -------
-    pattern : np.ndarray of shape (32,)
-        Flip count for each bit (4 bytes × 8 bits)
+    pattern : np.ndarray of shape (TOTAL_BITS,)
+        Flip count for each bit (NUM_COMPONENTS bytes × BITS_PER_BYTE)
     """
     if len(trajectory) < 2:
-        return np.zeros(32)
+        return np.zeros(TOTAL_BITS)
 
-    flip_counts = np.zeros(32)
+    flip_counts = np.zeros(TOTAL_BITS)
 
     for i in range(1, len(trajectory)):
         prev = trajectory[i-1]
@@ -391,10 +399,10 @@ def compute_spatial_pattern(trajectory: List[Tuple[int,int,int,int]]) -> np.ndar
         # Check each component
         for component_idx, (p, c) in enumerate(zip(prev, curr)):
             xor = p ^ c
-            # Check each bit
-            for bit_idx in range(8):
+            # Check each bit in the byte
+            for bit_idx in range(BITS_PER_BYTE):
                 if xor & (1 << bit_idx):
-                    flip_counts[component_idx * 8 + bit_idx] += 1
+                    flip_counts[component_idx * BITS_PER_BYTE + bit_idx] += 1
 
     return flip_counts
 
@@ -444,7 +452,7 @@ def analyze_sentence(sentence: str, verbose: bool = True) -> Dict:
         print(f"  V = {final[2]:08b} ({final[2]:3d})")
         print(f"  M = {final[3]:08b} ({final[3]:3d})")
 
-        print(f"\nTemporal phase: sector {result['time_coord']}/8")
+        print(f"\nTemporal phase: sector {result['time_coord']}/{PHASE_SECTORS}")
         print(f"  (45° × {result['time_coord']} = {result['time_coord'] * 45}°)")
 
         # Show which bits oscillate most
@@ -452,8 +460,8 @@ def analyze_sentence(sentence: str, verbose: bool = True) -> Dict:
         top_bits = np.argsort(space)[-5:][::-1]  # Top 5
         print(f"\nSpatial oscillation (top 5 bits):")
         for bit_idx in top_bits:
-            component = bit_idx // 8
-            bit_pos = bit_idx % 8
+            component = bit_idx // BITS_PER_BYTE
+            bit_pos = bit_idx % BITS_PER_BYTE
             component_name = ['L', 'R', 'V', 'M'][component]
             print(f"  {component_name}[{bit_pos}]: {int(space[bit_idx])} flips")
 
