@@ -33,13 +33,16 @@ class QuantumState:
     observer: Measurement basis z (0-255)
     Meta: Wavefunction amplitude (x ⊕ p ⊕ observer)
     """
+
     x: int  # Position
     p: int  # Momentum
     observer: int  # Measurement basis (z)
     Meta: int  # Wavefunction
 
     def __repr__(self):
-        return f"QM(x={self.x:08b} p={self.p:08b} z={self.observer:08b} ψ={self.Meta:08b})"
+        return (
+            f"QM(x={self.x:08b} p={self.p:08b} z={self.observer:08b} ψ={self.Meta:08b})"
+        )
 
 
 def schrodinger_step(state: QuantumState, change_basis: bool = False) -> QuantumState:
@@ -83,10 +86,14 @@ def schrodinger_step(state: QuantumState, change_basis: bool = False) -> Quantum
     return QuantumState(x=x_new, p=p_new, observer=observer_new, Meta=Meta_new)
 
 
-def evolve_wavefunction(initial_x: int, initial_p: int, initial_observer: int,
-                       steps: int = 20,
-                       basis_changes: List[int] = None,
-                       verbose: bool = False) -> Tuple[List[QuantumState], Optional[int]]:
+def evolve_wavefunction(
+    initial_x: int,
+    initial_p: int,
+    initial_observer: int,
+    steps: int = 20,
+    basis_changes: List[int] = None,
+    verbose: bool = False,
+) -> Tuple[List[QuantumState], Optional[int]]:
     """
     Evolve quantum wavefunction
 
@@ -112,7 +119,7 @@ def evolve_wavefunction(initial_x: int, initial_p: int, initial_observer: int,
         x=initial_x,
         p=initial_p,
         observer=initial_observer,
-        Meta=initial_x ^ initial_p ^ initial_observer
+        Meta=initial_x ^ initial_p ^ initial_observer,
     )
 
     trajectory = [state]
@@ -160,9 +167,9 @@ def detect_quantum_cycle(trajectory: List[QuantumState]) -> Optional[int]:
             prev = trajectory[idx_prev]
 
             # Check if wavefunction repeats
-            x_diff = bin(curr.x ^ prev.x).count('1')
-            p_diff = bin(curr.p ^ prev.p).count('1')
-            psi_diff = bin(curr.Meta ^ prev.Meta).count('1')
+            x_diff = bin(curr.x ^ prev.x).count("1")
+            p_diff = bin(curr.p ^ prev.p).count("1")
+            psi_diff = bin(curr.Meta ^ prev.Meta).count("1")
 
             if x_diff + p_diff + psi_diff > 0:
                 is_periodic = False
@@ -195,8 +202,8 @@ def compute_uncertainty(state: QuantumState) -> Tuple[int, int, int]:
     product : int
         Δx·Δp (should satisfy geometric constraint)
     """
-    delta_x = bin(state.x).count('1')
-    delta_p = bin(state.p).count('1')
+    delta_x = bin(state.x).count("1")
+    delta_p = bin(state.p).count("1")
     product = delta_x * delta_p
 
     return delta_x, delta_p, product
@@ -310,13 +317,9 @@ def test_energy_eigenstates():
         print(f"  Final Δx·Δp = {dx} × {dp} = {prod}")
         print()
 
-        results.append({
-            'description': desc,
-            'x': x,
-            'p': p,
-            'period': period,
-            'uncertainty': prod
-        })
+        results.append(
+            {"description": desc, "x": x, "p": p, "period": period, "uncertainty": prod}
+        )
 
     # Summary
     print("─" * 70)
@@ -326,9 +329,11 @@ def test_energy_eigenstates():
     print("─" * 70)
 
     for r in results:
-        period_str = str(r['period']) if r['period'] else "none"
-        eigenstate_mark = "✓" if r['period'] else "✗"
-        print(f"{r['description']:<35} {period_str:<8} {r['uncertainty']:<8} {eigenstate_mark:<12}")
+        period_str = str(r["period"]) if r["period"] else "none"
+        eigenstate_mark = "✓" if r["period"] else "✗"
+        print(
+            f"{r['description']:<35} {period_str:<8} {r['uncertainty']:<8} {eigenstate_mark:<12}"
+        )
 
 
 if __name__ == "__main__":
@@ -347,7 +352,8 @@ if __name__ == "__main__":
     print("\n" + "=" * 70)
     print("KEY INSIGHTS:")
     print("=" * 70)
-    print("""
+    print(
+        """
 1. Position and momentum as (x, p, observer, ψ)
 2. Complementarity: measuring one hides the other
 3. Observer basis determines which is revealed
@@ -355,4 +361,5 @@ if __name__ == "__main__":
 5. Energy eigenstates = periodic orbits
 6. Same structure as E-M, g-a, L-R-V
 7. Wavefunction = eigenstate of x-p oscillation
-    """)
+    """
+    )

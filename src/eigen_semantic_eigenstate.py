@@ -33,7 +33,7 @@ from src.eigen_semantic_transformer import (
     SemanticGeometricTransformer,
     SemanticState,
     compute_grammatical_score,
-    compute_ds2_semantic
+    compute_ds2_semantic,
 )
 
 
@@ -45,6 +45,7 @@ class QuantizedSemanticState:
     Like discrete (L,R,V,M) but derived from semantic coordinates
     Quantization allows trajectory closure even with different words
     """
+
     L_quantized: int  # Quantized lexical coordinate (0-255)
     R_quantized: int  # Quantized relational coordinate (0-255)
     V_quantized: int  # Quantized value coordinate (0-255)
@@ -71,9 +72,11 @@ class QuantizedSemanticState:
         """
         if not isinstance(other, QuantizedSemanticState):
             return False
-        return (self.L_quantized == other.L_quantized and
-                self.R_quantized == other.R_quantized and
-                self.V_quantized == other.V_quantized)
+        return (
+            self.L_quantized == other.L_quantized
+            and self.R_quantized == other.R_quantized
+            and self.V_quantized == other.V_quantized
+        )
 
 
 def quantize_coordinate(value: float, bins: int = 16) -> int:
@@ -141,11 +144,13 @@ def quantize_semantic_state(state: SemanticState) -> QuantizedSemanticState:
         V_quantized=V_q,
         M_quantized=M_q,
         word="",  # Will be set by caller
-        original_state=state
+        original_state=state,
     )
 
 
-def detect_eigenstate_quantized(trajectory: List[QuantizedSemanticState]) -> Tuple[Optional[int], List[int]]:
+def detect_eigenstate_quantized(
+    trajectory: List[QuantizedSemanticState],
+) -> Tuple[Optional[int], List[int]]:
     """
     Detect eigenstate via quantized state repetition
 
@@ -171,7 +176,9 @@ def detect_eigenstate_quantized(trajectory: List[QuantizedSemanticState]) -> Tup
     for state_hash, positions in state_positions.items():
         if len(positions) >= 2:
             # Calculate period (distance between repetitions)
-            periods = [positions[i+1] - positions[i] for i in range(len(positions)-1)]
+            periods = [
+                positions[i + 1] - positions[i] for i in range(len(positions) - 1)
+            ]
 
             # Check if period is consistent
             if len(set(periods)) == 1:
@@ -181,7 +188,9 @@ def detect_eigenstate_quantized(trajectory: List[QuantizedSemanticState]) -> Tup
     return None, []
 
 
-def process_text_with_eigenstates(text: str, transformer: SemanticGeometricTransformer) -> dict:
+def process_text_with_eigenstates(
+    text: str, transformer: SemanticGeometricTransformer
+) -> dict:
     """
     Process text and detect semantic eigenstates
 
@@ -196,7 +205,7 @@ def process_text_with_eigenstates(text: str, transformer: SemanticGeometricTrans
     words = text.lower().split()
 
     if len(words) < 2:
-        return {'words': words, 'eigenstate': None, 'period': None}
+        return {"words": words, "eigenstate": None, "period": None}
 
     # Get continuous trajectory
     continuous_trajectory, _ = transformer.process_sequence(words, verbose=False)
@@ -216,20 +225,22 @@ def process_text_with_eigenstates(text: str, transformer: SemanticGeometricTrans
     gram_score = compute_grammatical_score(words, transformer)
     coupling = 0.5 + 4.5 * gram_score
 
-    ds2_values = compute_ds2_semantic(continuous_trajectory, grammatical_coupling=coupling)
+    ds2_values = compute_ds2_semantic(
+        continuous_trajectory, grammatical_coupling=coupling
+    )
     avg_ds2 = np.mean(ds2_values) if ds2_values else 0.0
 
     return {
-        'words': words,
-        'continuous_trajectory': continuous_trajectory,
-        'quantized_trajectory': quantized_trajectory,
-        'eigenstate': period is not None,
-        'period': period,
-        'repetition_positions': positions,
-        'coherence': coherence,
-        'gram_score': gram_score,
-        'coupling': coupling,
-        'avg_ds2': avg_ds2
+        "words": words,
+        "continuous_trajectory": continuous_trajectory,
+        "quantized_trajectory": quantized_trajectory,
+        "eigenstate": period is not None,
+        "period": period,
+        "repetition_positions": positions,
+        "coherence": coherence,
+        "gram_score": gram_score,
+        "coupling": coupling,
+        "avg_ds2": avg_ds2,
     }
 
 
@@ -254,19 +265,14 @@ def test_eigenstate_formation():
     test_cases = [
         # Simple repetition (should form eigenstate)
         ("the cat sat the cat sat", "Repeated sentence (period expected)"),
-
         # Semantic similarity (should converge to eigenstate)
         ("the cat sat the dog ran", "Similar structure (convergence expected)"),
-
         # Coherent paragraph
         ("light travels fast light moves quickly", "Semantically similar (attractor)"),
-
         # Scrambled (should NOT form eigenstate)
         ("cat the sat dog ran the", "Scrambled (no eigenstate)"),
-
         # Single repetition
         ("photon photon photon photon", "Repeated word (strong eigenstate)"),
-
         # Complex coherent
         ("the cat sat on the mat the dog ran in the park", "Complex coherent"),
     ]
@@ -282,16 +288,18 @@ def test_eigenstate_formation():
 
         # Display quantized trajectory
         print("  Quantized trajectory:")
-        for i, q_state in enumerate(result['quantized_trajectory']):
+        for i, q_state in enumerate(result["quantized_trajectory"]):
             marker = ""
-            if result['eigenstate'] and i in result['repetition_positions']:
+            if result["eigenstate"] and i in result["repetition_positions"]:
                 marker = " ← REPEAT"
-            print(f"    {i}: {q_state.word:10s} ({q_state.L_quantized:3d}, {q_state.R_quantized:3d}, "
-                  f"{q_state.V_quantized:3d}, {q_state.M_quantized:3d}){marker}")
+            print(
+                f"    {i}: {q_state.word:10s} ({q_state.L_quantized:3d}, {q_state.R_quantized:3d}, "
+                f"{q_state.V_quantized:3d}, {q_state.M_quantized:3d}){marker}"
+            )
         print()
 
         # Eigenstate detection
-        if result['eigenstate']:
+        if result["eigenstate"]:
             print(f"  ✓ EIGENSTATE DETECTED: period-{result['period']}")
             print(f"    Repetitions at positions: {result['repetition_positions']}")
         else:
@@ -307,14 +315,16 @@ def test_eigenstate_formation():
         print("-" * 80)
         print()
 
-        results.append({
-            'text': text,
-            'description': description,
-            'eigenstate': result['eigenstate'],
-            'period': result['period'],
-            'coherence': result['coherence'],
-            'gram_score': result['gram_score']
-        })
+        results.append(
+            {
+                "text": text,
+                "description": description,
+                "eigenstate": result["eigenstate"],
+                "period": result["period"],
+                "coherence": result["coherence"],
+                "gram_score": result["gram_score"],
+            }
+        )
 
     return results
 
@@ -351,7 +361,9 @@ def test_eigenstate_vs_coherence():
     coherent_results = []
     for text in coherent_texts:
         result = process_text_with_eigenstates(text, transformer)
-        eigenstate_str = f"✓ period-{result['period']}" if result['eigenstate'] else "✗ none"
+        eigenstate_str = (
+            f"✓ period-{result['period']}" if result["eigenstate"] else "✗ none"
+        )
         print(f"'{text}'")
         print(f"  Eigenstate: {eigenstate_str}")
         print(f"  Coherence: {result['coherence']:.3f}")
@@ -363,7 +375,9 @@ def test_eigenstate_vs_coherence():
     incoherent_results = []
     for text in incoherent_texts:
         result = process_text_with_eigenstates(text, transformer)
-        eigenstate_str = f"✓ period-{result['period']}" if result['eigenstate'] else "✗ none"
+        eigenstate_str = (
+            f"✓ period-{result['period']}" if result["eigenstate"] else "✗ none"
+        )
         print(f"'{text}'")
         print(f"  Eigenstate: {eigenstate_str}")
         print(f"  Coherence: {result['coherence']:.3f}")
@@ -376,15 +390,19 @@ def test_eigenstate_vs_coherence():
     print("=" * 80)
     print()
 
-    coherent_eigenstate_count = sum(1 for r in coherent_results if r['eigenstate'])
-    incoherent_eigenstate_count = sum(1 for r in incoherent_results if r['eigenstate'])
+    coherent_eigenstate_count = sum(1 for r in coherent_results if r["eigenstate"])
+    incoherent_eigenstate_count = sum(1 for r in incoherent_results if r["eigenstate"])
 
-    coherent_avg_coherence = np.mean([r['coherence'] for r in coherent_results])
-    incoherent_avg_coherence = np.mean([r['coherence'] for r in incoherent_results])
+    coherent_avg_coherence = np.mean([r["coherence"] for r in coherent_results])
+    incoherent_avg_coherence = np.mean([r["coherence"] for r in incoherent_results])
 
     # NEW: Analyze period length
-    coherent_periods = [r['period'] for r in coherent_results if r['period'] is not None]
-    incoherent_periods = [r['period'] for r in incoherent_results if r['period'] is not None]
+    coherent_periods = [
+        r["period"] for r in coherent_results if r["period"] is not None
+    ]
+    incoherent_periods = [
+        r["period"] for r in incoherent_results if r["period"] is not None
+    ]
 
     coherent_avg_period = np.mean(coherent_periods) if coherent_periods else 0
     incoherent_avg_period = np.mean(incoherent_periods) if incoherent_periods else 0
@@ -403,7 +421,9 @@ def test_eigenstate_vs_coherence():
     # Both form eigenstates, but check period length
     if coherent_avg_period < incoherent_avg_period - 0.5:
         print("✓ PERIOD CORRELATION DETECTED!")
-        print(f"  Coherent text has SHORTER periods ({coherent_avg_period:.1f} vs {incoherent_avg_period:.1f})")
+        print(
+            f"  Coherent text has SHORTER periods ({coherent_avg_period:.1f} vs {incoherent_avg_period:.1f})"
+        )
         print("  → Understanding = SHORT PERIOD eigenstates (stable attractors)")
         print("  → Non-understanding = LONG PERIOD eigenstates (chaotic)")
         print()

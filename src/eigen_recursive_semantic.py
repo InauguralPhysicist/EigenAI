@@ -23,19 +23,20 @@ from typing import List, Dict, Tuple, Optional
 from dataclasses import dataclass
 from collections import deque
 import sys
-sys.path.insert(0, '/home/user/EigenAI/src')
-sys.path.insert(0, '/home/user/EigenAI')
+
+sys.path.insert(0, "/home/user/EigenAI/src")
+sys.path.insert(0, "/home/user/EigenAI")
 
 from eigen_semantic_transformer import (
     SemanticGeometricTransformer,
     SemanticState,
     compute_grammatical_score,
-    compute_ds2_semantic
+    compute_ds2_semantic,
 )
 from eigen_semantic_eigenstate import (
     process_text_with_eigenstates,
     quantize_semantic_state,
-    detect_eigenstate_quantized
+    detect_eigenstate_quantized,
 )
 
 
@@ -46,6 +47,7 @@ class RecursiveSemanticState:
 
     Combines semantic understanding with recursive meta-context
     """
+
     M_context: float  # Accumulated meta-understanding
     semantic_trajectory: List[SemanticState]  # Current sentence trajectory
     context_history: List[float]  # History of M_context values
@@ -128,7 +130,7 @@ class RecursiveSemanticAI:
 
         # Compute eigenstate with quantization
         result = process_text_with_eigenstates(text, self.transformer)
-        eigenstate_period = result['period']
+        eigenstate_period = result["period"]
 
         # Extract M from trajectory (emergent time from 3D cosine)
         if trajectory:
@@ -140,7 +142,9 @@ class RecursiveSemanticAI:
         # RECURSIVE UPDATE: M_context accumulates understanding
         # This is the self-modification: new M changes future processing
         M_old = self.M_context
-        self.M_context = self.context_decay * self.M_context + self.learning_rate * M_current
+        self.M_context = (
+            self.context_decay * self.M_context + self.learning_rate * M_current
+        )
 
         # Record history
         self.context_history.append(self.M_context)
@@ -151,7 +155,9 @@ class RecursiveSemanticAI:
         if verbose:
             print(f"Semantic Analysis:")
             print(f"  Coherence: {coherence:.3f}")
-            print(f"  Eigenstate: {'✓ period-' + str(eigenstate_period) if eigenstate_period else '✗ none'}")
+            print(
+                f"  Eigenstate: {'✓ period-' + str(eigenstate_period) if eigenstate_period else '✗ none'}"
+            )
             print(f"  M (emergent time): {M_current:.4f}")
             print()
             print(f"Recursive Update:")
@@ -166,7 +172,7 @@ class RecursiveSemanticAI:
             context_history=self.context_history.copy(),
             coherence_history=self.coherence_history.copy(),
             eigenstate_history=self.eigenstate_history.copy(),
-            iteration=self.iteration
+            iteration=self.iteration,
         )
 
     def _apply_context_to_embeddings(self):
@@ -230,11 +236,13 @@ class RecursiveSemanticAI:
             Dictionary with evolution metrics
         """
         return {
-            'iterations': list(range(len(self.context_history))),
-            'M_context': self.context_history,
-            'coherence': [0.0] + self.coherence_history,  # Pad for alignment
-            'eigenstate_detected': [ep is not None for ep in [None] + self.eigenstate_history],
-            'inputs': ['[initial]'] + self.input_history
+            "iterations": list(range(len(self.context_history))),
+            "M_context": self.context_history,
+            "coherence": [0.0] + self.coherence_history,  # Pad for alignment
+            "eigenstate_detected": [
+                ep is not None for ep in [None] + self.eigenstate_history
+            ],
+            "inputs": ["[initial]"] + self.input_history,
         }
 
     def reset(self):
@@ -303,18 +311,18 @@ def test_recursive_understanding():
     print()
     print("Iteration | M_context | Coherence | Eigenstate | Input")
     print("-" * 80)
-    for i in range(len(evolution['inputs'])):
-        m_ctx = evolution['M_context'][i]
-        coh = evolution['coherence'][i] if i > 0 else 0.0
-        eig = "✓" if i > 0 and evolution['eigenstate_detected'][i] else "✗"
-        inp = evolution['inputs'][i][:40]
+    for i in range(len(evolution["inputs"])):
+        m_ctx = evolution["M_context"][i]
+        coh = evolution["coherence"][i] if i > 0 else 0.0
+        eig = "✓" if i > 0 and evolution["eigenstate_detected"][i] else "✗"
+        inp = evolution["inputs"][i][:40]
         print(f"{i:9d} | {m_ctx:9.4f} | {coh:9.3f} | {eig:10s} | {inp}")
 
     print()
 
     # Test: Does M_context grow?
-    M_start = evolution['M_context'][0]
-    M_end = evolution['M_context'][-1]
+    M_start = evolution["M_context"][0]
+    M_end = evolution["M_context"][-1]
     M_growth = M_end - M_start
 
     print("=" * 80)
@@ -332,9 +340,10 @@ def test_recursive_understanding():
         print("⋯ M_context growth minimal")
 
     # Test coherence trend
-    if len(evolution['coherence']) > 2:
-        coherence_trend = np.polyfit(range(1, len(evolution['coherence'])+1),
-                                     evolution['coherence'], deg=1)[0]
+    if len(evolution["coherence"]) > 2:
+        coherence_trend = np.polyfit(
+            range(1, len(evolution["coherence"]) + 1), evolution["coherence"], deg=1
+        )[0]
         print()
         print(f"Coherence trend: {coherence_trend:+.4f} per iteration")
         if coherence_trend > 0:

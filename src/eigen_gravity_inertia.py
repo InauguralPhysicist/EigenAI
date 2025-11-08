@@ -31,16 +31,21 @@ class GravityInertiaState:
     observer: Observer frame coordinate z (0-255)
     Meta: Observer's measurement (g ⊕ a ⊕ observer)
     """
+
     g: int  # Gravity
     a: int  # Inertia
     observer: int  # Observer frame (z)
     Meta: int
 
     def __repr__(self):
-        return f"GI(g={self.g:08b} a={self.a:08b} z={self.observer:08b} M={self.Meta:08b})"
+        return (
+            f"GI(g={self.g:08b} a={self.a:08b} z={self.observer:08b} M={self.Meta:08b})"
+        )
 
 
-def equivalence_step(state: GravityInertiaState, rotate_observer: bool = False) -> GravityInertiaState:
+def equivalence_step(
+    state: GravityInertiaState, rotate_observer: bool = False
+) -> GravityInertiaState:
     """
     One step in gravity-inertia dynamics
 
@@ -78,10 +83,14 @@ def equivalence_step(state: GravityInertiaState, rotate_observer: bool = False) 
     return GravityInertiaState(g=g_new, a=a_new, observer=observer_new, Meta=Meta_new)
 
 
-def geodesic_trajectory(initial_g: int, initial_a: int, initial_observer: int,
-                       steps: int = 20,
-                       observer_rotations: List[int] = None,
-                       verbose: bool = False) -> Tuple[List[GravityInertiaState], Optional[int]]:
+def geodesic_trajectory(
+    initial_g: int,
+    initial_a: int,
+    initial_observer: int,
+    steps: int = 20,
+    observer_rotations: List[int] = None,
+    verbose: bool = False,
+) -> Tuple[List[GravityInertiaState], Optional[int]]:
     """
     Compute geodesic (free-fall trajectory) in g-a space
 
@@ -107,7 +116,7 @@ def geodesic_trajectory(initial_g: int, initial_a: int, initial_observer: int,
         g=initial_g,
         a=initial_a,
         observer=initial_observer,
-        Meta=initial_g ^ initial_a ^ initial_observer
+        Meta=initial_g ^ initial_a ^ initial_observer,
     )
 
     trajectory = [state]
@@ -155,8 +164,8 @@ def detect_geodesic_cycle(trajectory: List[GravityInertiaState]) -> Optional[int
             prev = trajectory[idx_prev]
 
             # Check if states match
-            g_diff = bin(curr.g ^ prev.g).count('1')
-            a_diff = bin(curr.a ^ prev.a).count('1')
+            g_diff = bin(curr.g ^ prev.g).count("1")
+            a_diff = bin(curr.a ^ prev.a).count("1")
 
             if g_diff + a_diff > 0:
                 is_periodic = False
@@ -191,9 +200,7 @@ def test_equivalence_principle():
 
     # Evolve without observer rotation
     traj_A, period_A = geodesic_trajectory(
-        g_init, a_init, z_init,
-        steps=10,
-        verbose=False
+        g_init, a_init, z_init, steps=10, verbose=False
     )
 
     print(f"Frame A trajectory: {len(traj_A)} states")
@@ -215,9 +222,7 @@ def test_equivalence_principle():
 
     # Evolve from rotated frame
     traj_B, period_B = geodesic_trajectory(
-        a_init, g_init, z_rotated,  # Swapped g and a
-        steps=10,
-        verbose=False
+        a_init, g_init, z_rotated, steps=10, verbose=False  # Swapped g and a
     )
 
     print(f"Frame B trajectory: {len(traj_B)} states")
@@ -265,8 +270,8 @@ def compute_gi_metric(state: GravityInertiaState) -> int:
     Here: ds² based on g-a balance
     """
     # Count stable vs changing bits
-    g_bits = bin(state.g).count('1')
-    a_bits = bin(state.a).count('1')
+    g_bits = bin(state.g).count("1")
+    a_bits = bin(state.a).count("1")
 
     # Metric: difference in activation
     ds2 = g_bits**2 - a_bits**2
@@ -304,17 +309,17 @@ def test_free_fall_eigenstates():
             print(f"  ✗ No eigenstate (open trajectory)")
 
         final_ds2 = compute_gi_metric(traj[-1])
-        regime = "time-like" if final_ds2 > 0 else ("space-like" if final_ds2 < 0 else "light-like")
+        regime = (
+            "time-like"
+            if final_ds2 > 0
+            else ("space-like" if final_ds2 < 0 else "light-like")
+        )
         print(f"  Final ds²: {final_ds2} ({regime})")
         print()
 
-        results.append({
-            'description': desc,
-            'g': g,
-            'a': a,
-            'period': period,
-            'ds2': final_ds2
-        })
+        results.append(
+            {"description": desc, "g": g, "a": a, "period": period, "ds2": final_ds2}
+        )
 
     # Summary
     print("─" * 70)
@@ -324,9 +329,11 @@ def test_free_fall_eigenstates():
     print("─" * 70)
 
     for r in results:
-        period_str = str(r['period']) if r['period'] else "none"
-        eigenstate_mark = "✓" if r['period'] else "✗"
-        print(f"{r['description']:<35} {period_str:<8} {r['ds2']:<8} {eigenstate_mark:<12}")
+        period_str = str(r["period"]) if r["period"] else "none"
+        eigenstate_mark = "✓" if r["period"] else "✗"
+        print(
+            f"{r['description']:<35} {period_str:<8} {r['ds2']:<8} {eigenstate_mark:<12}"
+        )
 
 
 if __name__ == "__main__":
@@ -345,7 +352,8 @@ if __name__ == "__main__":
     print("\n" + "=" * 70)
     print("KEY INSIGHTS:")
     print("=" * 70)
-    print("""
+    print(
+        """
 1. Gravity and inertia modeled as (g, a, observer, Meta)
 2. Equivalence principle: observer rotation swaps g ↔ a
 3. Geodesics = periodic orbits in g-a eigenspace
@@ -353,4 +361,5 @@ if __name__ == "__main__":
 5. Same geometric structure as E-M and L-R-V
 6. Free fall = eigenstate trajectory
 7. All frames see same fundamental geometry
-    """)
+    """
+    )

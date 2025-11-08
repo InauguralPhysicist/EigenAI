@@ -23,7 +23,8 @@ This would prove understanding has genuine relativistic structure.
 """
 
 import sys
-sys.path.insert(0, '/home/user/EigenAI')
+
+sys.path.insert(0, "/home/user/EigenAI")
 
 import numpy as np
 from typing import List, Tuple, Dict
@@ -31,7 +32,7 @@ from typing import List, Tuple, Dict
 from src.eigen_semantic_transformer import (
     SemanticGeometricTransformer,
     compute_grammatical_score,
-    compute_ds2_semantic
+    compute_ds2_semantic,
 )
 from src.eigen_recursive_semantic import RecursiveSemanticAI
 
@@ -62,7 +63,9 @@ def compute_lorentz_factor(M_context: float, M_max: float = 1.0) -> float:
     return gamma
 
 
-def semantic_boost(S: float, C: float, M_context: float, M_max: float = 1.0) -> Tuple[float, float]:
+def semantic_boost(
+    S: float, C: float, M_context: float, M_max: float = 1.0
+) -> Tuple[float, float]:
     """
     Apply Lorentz-like boost to semantic coordinates
 
@@ -116,7 +119,9 @@ def test_ds2_invariance():
 
     print("Testing ds² preservation across M_context boosts:")
     print("-" * 80)
-    print(f"{'Case':<25} {'M_context':<12} {'ds² original':<15} {'ds² boosted':<15} {'Preserved?'}")
+    print(
+        f"{'Case':<25} {'M_context':<12} {'ds² original':<15} {'ds² boosted':<15} {'Preserved?'}"
+    )
     print("-" * 80)
 
     all_preserved = True
@@ -136,7 +141,9 @@ def test_ds2_invariance():
             preserved = abs(ds2_boosted - ds2_original) < 0.01
             check = "✓" if preserved else "✗"
 
-            print(f"{description:<25} {M_context:<12.2f} {ds2_original:<15.4f} {ds2_boosted:<15.4f} {check}")
+            print(
+                f"{description:<25} {M_context:<12.2f} {ds2_original:<15.4f} {ds2_boosted:<15.4f} {check}"
+            )
 
             if not preserved:
                 all_preserved = False

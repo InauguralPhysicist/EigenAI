@@ -27,7 +27,8 @@ This unifies all our findings:
 """
 
 import sys
-sys.path.insert(0, '/home/user/EigenAI')
+
+sys.path.insert(0, "/home/user/EigenAI")
 
 import numpy as np
 from typing import Dict, List, Tuple
@@ -35,11 +36,9 @@ from typing import Dict, List, Tuple
 from src.eigen_semantic_transformer import (
     SemanticGeometricTransformer,
     compute_grammatical_score,
-    compute_ds2_semantic
+    compute_ds2_semantic,
 )
-from src.eigen_semantic_eigenstate import (
-    process_text_with_eigenstates
-)
+from src.eigen_semantic_eigenstate import process_text_with_eigenstates
 
 
 def compute_link_strength(trajectory, words, transformer) -> Tuple[float, int, int]:
@@ -73,7 +72,9 @@ def compute_link_strength(trajectory, words, transformer) -> Tuple[float, int, i
     return link_strength, time_like_count, total_links
 
 
-def compute_understanding_depth(text: str, transformer: SemanticGeometricTransformer) -> Dict:
+def compute_understanding_depth(
+    text: str, transformer: SemanticGeometricTransformer
+) -> Dict:
     """
     Compute unified understanding depth metric
 
@@ -92,12 +93,14 @@ def compute_understanding_depth(text: str, transformer: SemanticGeometricTransfo
     trajectory, _ = transformer.process_sequence(words, verbose=False)
 
     # Eigenstate period
-    period = result['period']
+    period = result["period"]
     if period is None:
         period = len(words) * 2  # Penalty for no eigenstate
 
     # Link strength
-    link_strength, time_like, total_links = compute_link_strength(trajectory, words, transformer)
+    link_strength, time_like, total_links = compute_link_strength(
+        trajectory, words, transformer
+    )
 
     # UNDERSTANDING DEPTH METRIC
     # Higher is better
@@ -105,17 +108,17 @@ def compute_understanding_depth(text: str, transformer: SemanticGeometricTransfo
     understanding_depth = link_strength / period
 
     return {
-        'text': text,
-        'eigenstate_period': result['period'],
-        'period_used': period,  # With penalty if no eigenstate
-        'link_strength': link_strength,
-        'time_like_links': time_like,
-        'total_links': total_links,
-        'understanding_depth': understanding_depth,
-        'coherence': result['coherence'],
-        'gram_score': result['gram_score'],
-        'coupling': result['coupling'],
-        'avg_ds2': result['avg_ds2']
+        "text": text,
+        "eigenstate_period": result["period"],
+        "period_used": period,  # With penalty if no eigenstate
+        "link_strength": link_strength,
+        "time_like_links": time_like,
+        "total_links": total_links,
+        "understanding_depth": understanding_depth,
+        "coherence": result["coherence"],
+        "gram_score": result["gram_score"],
+        "coupling": result["coupling"],
+        "avg_ds2": result["avg_ds2"],
     }
 
 
@@ -144,14 +147,11 @@ def test_understanding_depth_examples():
         # Expected: Deep understanding (stable + strong links)
         ("the cat sat", "Simple grammatical"),
         ("light travels fast", "Simple coherent"),
-
         # Expected: Medium understanding (longer text, structured)
         ("the cat sat on the mat", "Complex grammatical"),
-
         # Expected: Shallow understanding (scrambled)
         ("cat the sat", "Scrambled simple"),
         ("sat the cat", "Scrambled simple 2"),
-
         # Expected: Very shallow (chaotic)
         ("mat the on sat cat the", "Scrambled complex"),
     ]
@@ -168,8 +168,12 @@ def test_understanding_depth_examples():
         results.append(result)
 
         print(f"{description:20s} | '{text}'")
-        print(f"  Eigenstate: {'period-' + str(result['eigenstate_period']) if result['eigenstate_period'] else 'none'}")
-        print(f"  Link strength: {result['link_strength']:.3f} ({result['time_like_links']}/{result['total_links']} time-like)")
+        print(
+            f"  Eigenstate: {'period-' + str(result['eigenstate_period']) if result['eigenstate_period'] else 'none'}"
+        )
+        print(
+            f"  Link strength: {result['link_strength']:.3f} ({result['time_like_links']}/{result['total_links']} time-like)"
+        )
         print(f"  Understanding depth: {result['understanding_depth']:.4f}")
         print(f"  Coherence: {result['coherence']:.3f}")
         print()
@@ -181,22 +185,35 @@ def test_understanding_depth_examples():
     print()
 
     # Sort by understanding depth
-    sorted_results = sorted(results, key=lambda r: r['understanding_depth'], reverse=True)
+    sorted_results = sorted(
+        results, key=lambda r: r["understanding_depth"], reverse=True
+    )
 
     print("Ranked by Understanding Depth:")
     print("-" * 80)
     print(f"{'Rank':<6} {'Depth':<10} {'Period':<8} {'Links':<8} {'Text':<40}")
     print("-" * 80)
     for i, r in enumerate(sorted_results):
-        period_str = str(r['eigenstate_period']) if r['eigenstate_period'] else "none"
+        period_str = str(r["eigenstate_period"]) if r["eigenstate_period"] else "none"
         links_str = f"{r['link_strength']:.2f}"
-        print(f"{i+1:<6} {r['understanding_depth']:<10.4f} {period_str:<8} {links_str:<8} {r['text'][:40]}")
+        print(
+            f"{i+1:<6} {r['understanding_depth']:<10.4f} {period_str:<8} {links_str:<8} {r['text'][:40]}"
+        )
 
     print()
 
     # Test: Grammatical > Scrambled
-    grammatical_depths = [r['understanding_depth'] for r in results if 'grammatical' in results[results.index(r)]['text'].lower() or r['text'] in ["the cat sat", "light travels fast", "the cat sat on the mat"]]
-    scrambled_depths = [r['understanding_depth'] for r in results if 'scrambled' in [tc[1] for tc in test_cases if tc[0] == r['text']][0].lower()]
+    grammatical_depths = [
+        r["understanding_depth"]
+        for r in results
+        if "grammatical" in results[results.index(r)]["text"].lower()
+        or r["text"] in ["the cat sat", "light travels fast", "the cat sat on the mat"]
+    ]
+    scrambled_depths = [
+        r["understanding_depth"]
+        for r in results
+        if "scrambled" in [tc[1] for tc in test_cases if tc[0] == r["text"]][0].lower()
+    ]
 
     if grammatical_depths and scrambled_depths:
         avg_gram = np.mean(grammatical_depths)
@@ -255,13 +272,15 @@ def test_depth_with_recursive_context():
 
         # Compute understanding depth
         result = compute_understanding_depth(text, transformer)
-        depths.append(result['understanding_depth'])
+        depths.append(result["understanding_depth"])
 
         print(f"Iteration {ai.iteration}: '{text}'")
         print(f"  M_context: {state.M_context:.4f}")
         print(f"  Understanding depth: {result['understanding_depth']:.4f}")
         print(f"  Link strength: {result['link_strength']:.3f}")
-        print(f"  Period: {result['eigenstate_period'] if result['eigenstate_period'] else 'none'}")
+        print(
+            f"  Period: {result['eigenstate_period'] if result['eigenstate_period'] else 'none'}"
+        )
         print()
 
     # Analyze trend
@@ -319,7 +338,7 @@ def test_coherent_paragraph_vs_isolated():
     isolated_depths = []
     for text in isolated:
         result = compute_understanding_depth(text, transformer)
-        isolated_depths.append(result['understanding_depth'])
+        isolated_depths.append(result["understanding_depth"])
         print(f"  '{text}': depth = {result['understanding_depth']:.4f}")
 
     print()
@@ -328,7 +347,7 @@ def test_coherent_paragraph_vs_isolated():
     paragraph_depths = []
     for text in paragraphs:
         result = compute_understanding_depth(text, transformer)
-        paragraph_depths.append(result['understanding_depth'])
+        paragraph_depths.append(result["understanding_depth"])
         print(f"  '{text[:50]}...': depth = {result['understanding_depth']:.4f}")
 
     print()

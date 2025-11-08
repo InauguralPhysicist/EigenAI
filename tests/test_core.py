@@ -17,7 +17,7 @@ from src.eigen_text_core import (
     measure_understanding_change,
     detect_eigenstate,
     analyze_understanding_regime,
-    understanding_loop
+    understanding_loop,
 )
 
 
@@ -126,16 +126,13 @@ def test_understanding_loop_convergence():
     text = "The cat sat on the mat"
 
     M_final, M_history, metrics = understanding_loop(
-        text,
-        max_iterations=20,
-        method='geometric',
-        verbose=False
+        text, max_iterations=20, method="geometric", verbose=False
     )
 
     assert len(M_history) > 0
-    assert 'converged' in metrics
-    assert 'eigenstate_type' in metrics
-    assert metrics['iterations'] <= 20
+    assert "converged" in metrics
+    assert "eigenstate_type" in metrics
+    assert metrics["iterations"] <= 20
 
 
 def test_xor_vs_geometric():
@@ -143,14 +140,14 @@ def test_xor_vs_geometric():
     text = "Simple test sentence"
 
     M_geo, _, metrics_geo = understanding_loop(
-        text, max_iterations=15, method='geometric', verbose=False
+        text, max_iterations=15, method="geometric", verbose=False
     )
 
     M_xor, _, metrics_xor = understanding_loop(
-        text, max_iterations=15, method='xor', verbose=False
+        text, max_iterations=15, method="xor", verbose=False
     )
 
-    assert metrics_geo['converged'] or metrics_xor['converged']
+    assert metrics_geo["converged"] or metrics_xor["converged"]
 
 
 # Tests are now run with: pytest tests/test_core.py -v

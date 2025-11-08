@@ -41,10 +41,11 @@ class LorentzState:
     ds2: int
         Metric signature S² - C²
     """
+
     temporal: int  # Time (0-7 phase sectors)
-    spatial: int   # Space (bit pattern)
+    spatial: int  # Space (bit pattern)
     observer: int  # Observer frame
-    ds2: int       # Metric signature
+    ds2: int  # Metric signature
 
     def __repr__(self):
         return f"Lorentz(t={self.temporal}/8, x={self.spatial:08b}, z={self.observer:08b}, ds²={self.ds2})"
@@ -73,7 +74,7 @@ def compute_ds2_minkowski(temporal: int, spatial: int) -> int:
         Metric signature
     """
     t_squared = temporal * temporal
-    x_squared = bin(spatial).count('1') ** 2
+    x_squared = bin(spatial).count("1") ** 2
 
     ds2 = t_squared - x_squared
 
@@ -116,7 +117,7 @@ def lorentz_boost(state: LorentzState, boost_angle: int) -> LorentzState:
     boost_angle = boost_angle % 8  # Keep in range 0-7
 
     # Extract spatial bits
-    x_bits = bin(state.spatial).count('1')
+    x_bits = bin(state.spatial).count("1")
 
     # Boost mixes time and space
     # Temporal phase rotates based on spatial content
@@ -138,10 +139,7 @@ def lorentz_boost(state: LorentzState, boost_angle: int) -> LorentzState:
     ds2_new = compute_ds2_minkowski(temporal_new, spatial_new)
 
     return LorentzState(
-        temporal=temporal_new,
-        spatial=spatial_new,
-        observer=observer_new,
-        ds2=ds2_new
+        temporal=temporal_new, spatial=spatial_new, observer=observer_new, ds2=ds2_new
     )
 
 
@@ -206,7 +204,7 @@ def test_boost_invariance():
         temporal=temporal_init,
         spatial=spatial_init,
         observer=observer_init,
-        ds2=ds2_init
+        ds2=ds2_init,
     )
 
     print(f"Rest frame:")
@@ -227,7 +225,9 @@ def test_boost_invariance():
         ds2_diff = abs(boosted.ds2 - ds2_init)
         invariant_mark = "✓" if ds2_diff <= 5 else "✗"  # Small tolerance for discrete
 
-        print(f"Boost angle {boost_angle} (45° × {boost_angle} = {degrees}°, v≈{velocity:.2f}c):")
+        print(
+            f"Boost angle {boost_angle} (45° × {boost_angle} = {degrees}°, v≈{velocity:.2f}c):"
+        )
         print(f"  {boosted}")
         print(f"  ds² change: {ds2_diff} {invariant_mark}")
         print()
@@ -311,19 +311,23 @@ def test_velocity_composition():
     print(f"  {state_1}")
     print()
 
-    print(f"Second boost: v₂ = {v2}c → angle = {boost2} (45° × {boost2} = {boost2*45}°)")
+    print(
+        f"Second boost: v₂ = {v2}c → angle = {boost2} (45° × {boost2} = {boost2*45}°)"
+    )
     state_2 = lorentz_boost(state_1, boost2)
     print(f"  {state_2}")
     print()
 
     # Total boost
     boost_total = (boost1 + boost2) % 8
-    print(f"Total boost: angle = {boost_total} (45° × {boost_total} = {boost_total*45}°)")
+    print(
+        f"Total boost: angle = {boost_total} (45° × {boost_total} = {boost_total*45}°)"
+    )
 
     # Classical (wrong): v = v1 + v2 = 0.7c
     # Relativistic (correct): v = (v1+v2)/(1+v1*v2) ≈ 0.636c
     v_classical = v1 + v2
-    v_relativistic = (v1 + v2) / (1 + v1*v2)
+    v_relativistic = (v1 + v2) / (1 + v1 * v2)
 
     print(f"\nVelocity addition:")
     print(f"  Classical (wrong): v = {v_classical:.3f}c")
@@ -356,7 +360,7 @@ def test_time_dilation():
             temporal=t,
             spatial=0b00000000,  # At rest (no spatial bits)
             observer=0b10101010,
-            ds2=compute_ds2_minkowski(t, 0)
+            ds2=compute_ds2_minkowski(t, 0),
         )
         states_rest.append(state)
 
@@ -407,7 +411,8 @@ if __name__ == "__main__":
     print("\n" + "=" * 70)
     print("KEY INSIGHTS:")
     print("=" * 70)
-    print("""
+    print(
+        """
 1. Lorentz boosts = discrete frame rotations (45° steps)
 2. 8 boost angles correspond to 8 phase sectors
 3. ds² approximately invariant (discrete approximation)
@@ -425,4 +430,5 @@ The 45° structure is fundamental:
 
 This shows special relativity isn't a separate theory.
 It's the SAME eigenstate-oscillation pattern applied to spacetime.
-    """)
+    """
+    )

@@ -31,6 +31,7 @@ class EMState:
     M: Magnetic component (0-255)
     Meta: Observer coordinate (E ⊕ M)
     """
+
     E: int
     M_field: int  # Magnetic (renamed to avoid confusion with Meta)
     Meta: int
@@ -82,10 +83,13 @@ def maxwell_step(state: EMState, coupling: int = 1) -> EMState:
     return EMState(E=E_new, M_field=M_new, Meta=Meta_new)
 
 
-def propagate_em_field(initial_E: int, initial_M: int,
-                       steps: int = 20,
-                       coupling: int = 1,
-                       verbose: bool = False) -> Tuple[List[EMState], Optional[int]]:
+def propagate_em_field(
+    initial_E: int,
+    initial_M: int,
+    steps: int = 20,
+    coupling: int = 1,
+    verbose: bool = False,
+) -> Tuple[List[EMState], Optional[int]]:
     """
     Propagate EM field through time
 
@@ -153,8 +157,8 @@ def detect_em_cycle(trajectory: List[EMState], threshold: int = 0) -> Optional[i
             curr_state = trajectory[idx_curr]
             prev_state = trajectory[idx_prev]
 
-            E_diff = bin(curr_state.E ^ prev_state.E).count('1')
-            M_diff = bin(curr_state.M_field ^ prev_state.M_field).count('1')
+            E_diff = bin(curr_state.E ^ prev_state.E).count("1")
+            M_diff = bin(curr_state.M_field ^ prev_state.M_field).count("1")
 
             if E_diff + M_diff > threshold:
                 is_periodic = False
@@ -166,9 +170,9 @@ def detect_em_cycle(trajectory: List[EMState], threshold: int = 0) -> Optional[i
     return None
 
 
-def analyze_em_field(initial_E: int, initial_M: int,
-                     coupling: int = 1,
-                     label: str = "") -> dict:
+def analyze_em_field(
+    initial_E: int, initial_M: int, coupling: int = 1, label: str = ""
+) -> dict:
     """
     Full analysis of EM field evolution
 
@@ -186,10 +190,7 @@ def analyze_em_field(initial_E: int, initial_M: int,
     print()
 
     trajectory, period = propagate_em_field(
-        initial_E, initial_M,
-        steps=20,
-        coupling=coupling,
-        verbose=True
+        initial_E, initial_M, steps=20, coupling=coupling, verbose=True
     )
 
     print()
@@ -225,10 +226,10 @@ def analyze_em_field(initial_E: int, initial_M: int,
         print(f"  → M-dominated field")
 
     return {
-        'trajectory': trajectory,
-        'period': period,
-        'E_variance': E_variance,
-        'M_variance': M_variance
+        "trajectory": trajectory,
+        "period": period,
+        "E_variance": E_variance,
+        "M_variance": M_variance,
     }
 
 
@@ -264,12 +265,9 @@ def test_light_eigenstates():
         else:
             print(f"✗ No eigenstate")
 
-        results.append({
-            'description': description,
-            'E': E_init,
-            'M': M_init,
-            'period': period
-        })
+        results.append(
+            {"description": description, "E": E_init, "M": M_init, "period": period}
+        )
 
     # Summary
     print("\n" + "=" * 70)
@@ -279,9 +277,11 @@ def test_light_eigenstates():
     print("─" * 70)
 
     for r in results:
-        period_str = str(r['period']) if r['period'] else "none"
-        eigenstate_mark = "✓" if r['period'] else "✗"
-        print(f"{r['description']:<35} {r['E']:08b} {r['M']:08b} {period_str:<8} {eigenstate_mark}")
+        period_str = str(r["period"]) if r["period"] else "none"
+        eigenstate_mark = "✓" if r["period"] else "✗"
+        print(
+            f"{r['description']:<35} {r['E']:08b} {r['M']:08b} {period_str:<8} {eigenstate_mark}"
+        )
 
 
 if __name__ == "__main__":
@@ -295,19 +295,13 @@ if __name__ == "__main__":
 
     # Test 1: Symmetric initial condition
     analyze_em_field(
-        initial_E=0b10101010,
-        initial_M=0b01010101,
-        label="Symmetric E-M (orthogonal)"
+        initial_E=0b10101010, initial_M=0b01010101, label="Symmetric E-M (orthogonal)"
     )
 
     print("\n\n")
 
     # Test 2: Pure E field
-    analyze_em_field(
-        initial_E=0b11111111,
-        initial_M=0b00000000,
-        label="Pure E field"
-    )
+    analyze_em_field(initial_E=0b11111111, initial_M=0b00000000, label="Pure E field")
 
     print("\n\n")
 
@@ -317,7 +311,8 @@ if __name__ == "__main__":
     print("\n" + "=" * 70)
     print("KEY INSIGHTS:")
     print("=" * 70)
-    print("""
+    print(
+        """
 1. EM field modeled as (E, M, Meta) eigenstate
 2. Maxwell's equations → XOR cascade with rotation
 3. Light = periodic orbit (E → M → E → M)
@@ -325,4 +320,5 @@ if __name__ == "__main__":
 5. Symmetric E/M oscillation = light-like regime
 6. Same geometric structure as L ↔ R ↔ V text
 7. Fundamental dualities = eigenstates of oscillation
-    """)
+    """
+    )

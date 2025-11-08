@@ -20,7 +20,8 @@ Test:
 """
 
 import sys
-sys.path.insert(0, '/home/user/EigenAI')
+
+sys.path.insert(0, "/home/user/EigenAI")
 
 import numpy as np
 from dataclasses import dataclass
@@ -29,7 +30,7 @@ from src.eigen_semantic_transformer import (
     SemanticGeometricTransformer,
     compute_grammatical_score,
     compute_ds2_semantic,
-    classify_regime
+    classify_regime,
 )
 
 
@@ -45,6 +46,7 @@ class SemanticNode:
             struct semantic_state *next;  // Points to next state
         };
     """
+
     L: float
     R: float
     V: float
@@ -53,7 +55,7 @@ class SemanticNode:
     word: str
 
     # Self-referential pointer
-    next: Optional['SemanticNode'] = None
+    next: Optional["SemanticNode"] = None
 
     def __hash__(self):
         """Hash based on semantic position (for cycle detection)"""
@@ -63,11 +65,12 @@ class SemanticNode:
         """Equality for cycle detection"""
         if not isinstance(other, SemanticNode):
             return False
-        return (abs(self.M - other.M) < 0.1 and
-                self.word == other.word)
+        return abs(self.M - other.M) < 0.1 and self.word == other.word
 
 
-def build_semantic_linked_list(words: List[str], transformer: SemanticGeometricTransformer) -> Optional[SemanticNode]:
+def build_semantic_linked_list(
+    words: List[str], transformer: SemanticGeometricTransformer
+) -> Optional[SemanticNode]:
     """
     Build explicit linked list of semantic states (like C code example 4)
 
@@ -99,7 +102,7 @@ def build_semantic_linked_list(words: List[str], transformer: SemanticGeometricT
             V=V_val,
             M=state.M,
             semantic_vec=state.semantic_vec,
-            word=words[i]
+            word=words[i],
         )
 
         if head is None:
@@ -146,8 +149,9 @@ def detect_circular_reference(head: SemanticNode) -> Tuple[bool, Optional[int]]:
     return False, None
 
 
-def measure_link_strength(node1: SemanticNode, node2: SemanticNode,
-                          grammatical_coupling: float) -> Tuple[float, str]:
+def measure_link_strength(
+    node1: SemanticNode, node2: SemanticNode, grammatical_coupling: float
+) -> Tuple[float, str]:
     """
     Measure "link strength" between two states using ds² metric
 
@@ -167,14 +171,15 @@ def measure_link_strength(node1: SemanticNode, node2: SemanticNode,
     c = c_base * grammatical_coupling
 
     # METRIC: ds² = S² - (c·T)²
-    ds2 = S**2 - (c * T)**2
+    ds2 = S**2 - (c * T) ** 2
     regime = classify_regime(ds2)
 
     return ds2, regime
 
 
-def traverse_and_analyze(head: SemanticNode, words: List[str],
-                        transformer: SemanticGeometricTransformer) -> dict:
+def traverse_and_analyze(
+    head: SemanticNode, words: List[str], transformer: SemanticGeometricTransformer
+) -> dict:
     """
     Traverse linked list and analyze link strengths (like C example 5)
 
@@ -198,13 +203,15 @@ def traverse_and_analyze(head: SemanticNode, words: List[str],
         # Measure link strength
         ds2, regime = measure_link_strength(current, next_node, coupling)
 
-        links.append({
-            'from': current.word,
-            'to': next_node.word,
-            'ds2': ds2,
-            'regime': regime,
-            'position': position
-        })
+        links.append(
+            {
+                "from": current.word,
+                "to": next_node.word,
+                "ds2": ds2,
+                "regime": regime,
+                "position": position,
+            }
+        )
 
         current = current.next
         position += 1
@@ -213,15 +220,15 @@ def traverse_and_analyze(head: SemanticNode, words: List[str],
     has_cycle, period = detect_circular_reference(head)
 
     # Compute average link strength
-    avg_ds2 = np.mean([link['ds2'] for link in links]) if links else 0.0
+    avg_ds2 = np.mean([link["ds2"] for link in links]) if links else 0.0
 
     return {
-        'links': links,
-        'has_cycle': has_cycle,
-        'cycle_period': period,
-        'avg_ds2': avg_ds2,
-        'coupling': coupling,
-        'gram_score': gram_score
+        "links": links,
+        "has_cycle": has_cycle,
+        "cycle_period": period,
+        "avg_ds2": avg_ds2,
+        "coupling": coupling,
+        "gram_score": gram_score,
     }
 
 
@@ -281,13 +288,15 @@ def test_self_referential_understanding():
 
         # Print link analysis
         print(f"  Link strengths:")
-        for link in analysis['links']:
-            print(f"    {link['from']:8s} → {link['to']:8s}  ds² = {link['ds2']:7.4f}  [{link['regime']}]")
+        for link in analysis["links"]:
+            print(
+                f"    {link['from']:8s} → {link['to']:8s}  ds² = {link['ds2']:7.4f}  [{link['regime']}]"
+            )
         print()
 
         # Circular reference detection
         print(f"  Circular reference (eigenstate): ", end="")
-        if analysis['has_cycle']:
+        if analysis["has_cycle"]:
             print(f"✓ DETECTED (period-{analysis['cycle_period']})")
         else:
             print("✗ NOT DETECTED")
@@ -301,14 +310,16 @@ def test_self_referential_understanding():
         print("-" * 80)
         print()
 
-        results.append({
-            'text': text,
-            'description': description,
-            'has_cycle': analysis['has_cycle'],
-            'cycle_period': analysis['cycle_period'],
-            'avg_ds2': analysis['avg_ds2'],
-            'gram_score': analysis['gram_score']
-        })
+        results.append(
+            {
+                "text": text,
+                "description": description,
+                "has_cycle": analysis["has_cycle"],
+                "cycle_period": analysis["cycle_period"],
+                "avg_ds2": analysis["avg_ds2"],
+                "gram_score": analysis["gram_score"],
+            }
+        )
 
     return results
 
@@ -344,8 +355,10 @@ def test_pointer_analogy():
     print(f"  Average ds² = {gram_analysis['avg_ds2']:.4f}")
     print(f"  Coupling = {gram_analysis['coupling']:.2f}x")
     print(f"  Links:")
-    for link in gram_analysis['links']:
-        ptr_type = "STRONG LINK (ptr = &next)" if link['ds2'] < 0 else "WEAK LINK (like NULL)"
+    for link in gram_analysis["links"]:
+        ptr_type = (
+            "STRONG LINK (ptr = &next)" if link["ds2"] < 0 else "WEAK LINK (like NULL)"
+        )
         print(f"    {link['from']} → {link['to']}: {ptr_type}")
     print()
 
@@ -353,21 +366,27 @@ def test_pointer_analogy():
     print(f"  Average ds² = {scram_analysis['avg_ds2']:.4f}")
     print(f"  Coupling = {scram_analysis['coupling']:.2f}x")
     print(f"  Links:")
-    for link in scram_analysis['links']:
-        ptr_type = "STRONG LINK (ptr = &next)" if link['ds2'] < 0 else "WEAK LINK (like NULL)"
+    for link in scram_analysis["links"]:
+        ptr_type = (
+            "STRONG LINK (ptr = &next)" if link["ds2"] < 0 else "WEAK LINK (like NULL)"
+        )
         print(f"    {link['from']} → {link['to']}: {ptr_type}")
     print()
 
     # Analysis
-    gram_strong_links = sum(1 for link in gram_analysis['links'] if link['ds2'] < 0)
-    scram_strong_links = sum(1 for link in scram_analysis['links'] if link['ds2'] < 0)
+    gram_strong_links = sum(1 for link in gram_analysis["links"] if link["ds2"] < 0)
+    scram_strong_links = sum(1 for link in scram_analysis["links"] if link["ds2"] < 0)
 
     print("=" * 80)
     print("ANALYSIS:")
     print("=" * 80)
     print()
-    print(f"Grammatical: {gram_strong_links}/{len(gram_analysis['links'])} strong links")
-    print(f"Scrambled:   {scram_strong_links}/{len(scram_analysis['links'])} strong links")
+    print(
+        f"Grammatical: {gram_strong_links}/{len(gram_analysis['links'])} strong links"
+    )
+    print(
+        f"Scrambled:   {scram_strong_links}/{len(scram_analysis['links'])} strong links"
+    )
     print()
 
     if gram_strong_links > scram_strong_links:
@@ -416,7 +435,7 @@ def test_circular_reference_is_understanding():
 
         print(f"'{text}' ({desc})")
         print(f"  Circular reference: {'✓' if analysis['has_cycle'] else '✗'}")
-        if analysis['has_cycle']:
+        if analysis["has_cycle"]:
             print(f"  Period: {analysis['cycle_period']}")
         print(f"  Average ds²: {analysis['avg_ds2']:.4f}")
         print()

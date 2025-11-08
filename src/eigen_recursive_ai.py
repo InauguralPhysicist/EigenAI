@@ -25,7 +25,8 @@ import numpy as np
 from typing import List, Dict, Tuple, Optional, Callable
 from dataclasses import dataclass
 import sys
-sys.path.insert(0, '/home/user/EigenAI')
+
+sys.path.insert(0, "/home/user/EigenAI")
 
 from src.eigen_discrete_tokenizer import tokenize_word, compute_change_stability
 
@@ -40,6 +41,7 @@ class RecursiveState:
     history: Trajectory through understanding space
     eigenstate: Whether meta-understanding has converged
     """
+
     M_context: np.ndarray  # Accumulated meta-understanding
     extraction_rules: Dict  # Self-modifiable extraction parameters
     history: List[np.ndarray]  # Trajectory of M_context
@@ -79,12 +81,12 @@ class RecursiveEigenAI:
 
         # Self-modifiable extraction rules
         self.extraction_rules = {
-            'L_weight': 1.0,  # How much to weight lexical
-            'R_weight': 1.0,  # How much to weight relational
-            'V_weight': 1.0,  # How much to weight value
-            'context_influence': 0.5,  # How much M_context affects extraction
-            'learning_rate': 0.3,  # How fast to update M_context
-            'self_modification_rate': 0.1,  # How fast to modify own rules
+            "L_weight": 1.0,  # How much to weight lexical
+            "R_weight": 1.0,  # How much to weight relational
+            "V_weight": 1.0,  # How much to weight value
+            "context_influence": 0.5,  # How much M_context affects extraction
+            "learning_rate": 0.3,  # How fast to update M_context
+            "self_modification_rate": 0.1,  # How fast to modify own rules
         }
 
         # History
@@ -114,7 +116,7 @@ class RecursiveEigenAI:
             L[hash_L] = 1.0
 
         if len(words) >= 2:
-            hash_R = hash(words[len(words)//2]) % self.embedding_dim
+            hash_R = hash(words[len(words) // 2]) % self.embedding_dim
             R[hash_R] = 1.0
 
         if len(words) >= 3:
@@ -123,7 +125,9 @@ class RecursiveEigenAI:
 
         return L, R, V
 
-    def extract_LRV_contextual(self, text: str, M_context: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    def extract_LRV_contextual(
+        self, text: str, M_context: np.ndarray
+    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         """
         Context-aware extraction using accumulated understanding
 
@@ -148,7 +152,7 @@ class RecursiveEigenAI:
         L_naive, R_naive, V_naive = self.extract_LRV_naive(text)
 
         # Modify based on M_context (THIS IS SELF-MODIFICATION)
-        context_influence = self.extraction_rules['context_influence']
+        context_influence = self.extraction_rules["context_influence"]
 
         # Project M_context onto L, R, V
         # This makes extraction depend on accumulated understanding
@@ -162,9 +166,9 @@ class RecursiveEigenAI:
         V = (1 - context_influence) * V_naive + context_influence * V_projection
 
         # Apply self-modifiable weights
-        L = L * self.extraction_rules['L_weight']
-        R = R * self.extraction_rules['R_weight']
-        V = V * self.extraction_rules['V_weight']
+        L = L * self.extraction_rules["L_weight"]
+        R = R * self.extraction_rules["R_weight"]
+        V = V * self.extraction_rules["V_weight"]
 
         # Normalize
         L = L / (np.linalg.norm(L) + 1e-10)
@@ -173,8 +177,9 @@ class RecursiveEigenAI:
 
         return L, R, V
 
-    def compute_M_recursive(self, L: np.ndarray, R: np.ndarray, V: np.ndarray,
-                           M_context: np.ndarray) -> np.ndarray:
+    def compute_M_recursive(
+        self, L: np.ndarray, R: np.ndarray, V: np.ndarray, M_context: np.ndarray
+    ) -> np.ndarray:
         """
         Compute new meta-understanding recursively
 
@@ -203,7 +208,7 @@ class RecursiveEigenAI:
         M_current = M_current / (np.linalg.norm(M_current) + 1e-10)
 
         # Recursive update (XOR analog for continuous)
-        learning_rate = self.extraction_rules['learning_rate']
+        learning_rate = self.extraction_rules["learning_rate"]
 
         M_new = (1 - learning_rate) * M_context + learning_rate * M_current
 
@@ -212,8 +217,9 @@ class RecursiveEigenAI:
 
         return M_new
 
-    def self_modify_rules(self, L: np.ndarray, R: np.ndarray, V: np.ndarray,
-                         M_context: np.ndarray):
+    def self_modify_rules(
+        self, L: np.ndarray, R: np.ndarray, V: np.ndarray, M_context: np.ndarray
+    ):
         """
         AI MODIFIES ITS OWN EXTRACTION RULES
 
@@ -233,7 +239,7 @@ class RecursiveEigenAI:
         M_context : np.ndarray
             Current understanding
         """
-        modification_rate = self.extraction_rules['self_modification_rate']
+        modification_rate = self.extraction_rules["self_modification_rate"]
 
         # Analyze which components are most aligned with context
         L_alignment = abs(np.dot(L, M_context))
@@ -243,23 +249,29 @@ class RecursiveEigenAI:
         total_alignment = L_alignment + R_alignment + V_alignment + 1e-10
 
         # Adjust weights based on alignment (emphasize what works)
-        self.extraction_rules['L_weight'] += modification_rate * (L_alignment / total_alignment - 0.33)
-        self.extraction_rules['R_weight'] += modification_rate * (R_alignment / total_alignment - 0.33)
-        self.extraction_rules['V_weight'] += modification_rate * (V_alignment / total_alignment - 0.33)
+        self.extraction_rules["L_weight"] += modification_rate * (
+            L_alignment / total_alignment - 0.33
+        )
+        self.extraction_rules["R_weight"] += modification_rate * (
+            R_alignment / total_alignment - 0.33
+        )
+        self.extraction_rules["V_weight"] += modification_rate * (
+            V_alignment / total_alignment - 0.33
+        )
 
         # Keep weights positive and bounded
-        for key in ['L_weight', 'R_weight', 'V_weight']:
+        for key in ["L_weight", "R_weight", "V_weight"]:
             self.extraction_rules[key] = np.clip(self.extraction_rules[key], 0.1, 2.0)
 
         # Adjust context influence based on consistency
         M_norm = np.linalg.norm(M_context)
         if M_norm > 0.5:  # Strong context
-            self.extraction_rules['context_influence'] += modification_rate * 0.1
+            self.extraction_rules["context_influence"] += modification_rate * 0.1
         else:  # Weak context
-            self.extraction_rules['context_influence'] -= modification_rate * 0.1
+            self.extraction_rules["context_influence"] -= modification_rate * 0.1
 
-        self.extraction_rules['context_influence'] = np.clip(
-            self.extraction_rules['context_influence'], 0.0, 0.9
+        self.extraction_rules["context_influence"] = np.clip(
+            self.extraction_rules["context_influence"], 0.0, 0.9
         )
 
     def detect_meta_eigenstate(self, threshold: float = 0.99, window: int = 3) -> bool:
@@ -287,7 +299,7 @@ class RecursiveEigenAI:
         # Check if M_context has stopped changing
         recent_stable = True
         for i in range(1, window):
-            M_prev = self.M_history[-i-1]
+            M_prev = self.M_history[-i - 1]
             M_curr = self.M_history[-i]
 
             # Alignment
@@ -346,7 +358,9 @@ class RecursiveEigenAI:
             # Subsequent inputs: context-aware
             L, R, V = self.extract_LRV_contextual(text, self.M_context)
             if verbose:
-                print(f"Using contextual extraction (context norm: {np.linalg.norm(self.M_context):.3f})")
+                print(
+                    f"Using contextual extraction (context norm: {np.linalg.norm(self.M_context):.3f})"
+                )
 
         if verbose:
             print(f"  L: {L[:5]}... (norm: {np.linalg.norm(L):.3f})")
@@ -370,10 +384,18 @@ class RecursiveEigenAI:
 
         if verbose:
             print(f"\nSelf-modification:")
-            print(f"  L_weight: {old_rules['L_weight']:.3f} → {self.extraction_rules['L_weight']:.3f}")
-            print(f"  R_weight: {old_rules['R_weight']:.3f} → {self.extraction_rules['R_weight']:.3f}")
-            print(f"  V_weight: {old_rules['V_weight']:.3f} → {self.extraction_rules['V_weight']:.3f}")
-            print(f"  context_influence: {old_rules['context_influence']:.3f} → {self.extraction_rules['context_influence']:.3f}")
+            print(
+                f"  L_weight: {old_rules['L_weight']:.3f} → {self.extraction_rules['L_weight']:.3f}"
+            )
+            print(
+                f"  R_weight: {old_rules['R_weight']:.3f} → {self.extraction_rules['R_weight']:.3f}"
+            )
+            print(
+                f"  V_weight: {old_rules['V_weight']:.3f} → {self.extraction_rules['V_weight']:.3f}"
+            )
+            print(
+                f"  context_influence: {old_rules['context_influence']:.3f} → {self.extraction_rules['context_influence']:.3f}"
+            )
 
         # Update context
         M_context_old = self.M_context.copy()
@@ -392,14 +414,14 @@ class RecursiveEigenAI:
                 print(f"\n⋯ Still learning (meta-eigenstate not reached)")
 
         return {
-            'M_context_new': self.M_context,
-            'M_context_old': M_context_old,
-            'extraction_rules': self.extraction_rules.copy(),
-            'eigenstate': self.eigenstate_reached,
-            'iteration': self.iteration,
-            'L': L,
-            'R': R,
-            'V': V,
+            "M_context_new": self.M_context,
+            "M_context_old": M_context_old,
+            "extraction_rules": self.extraction_rules.copy(),
+            "eigenstate": self.eigenstate_reached,
+            "iteration": self.iteration,
+            "L": L,
+            "R": R,
+            "V": V,
         }
 
     def query(self, text: str, verbose: bool = False) -> str:
@@ -464,12 +486,12 @@ class RecursiveEigenAI:
     def get_state_summary(self) -> Dict:
         """Get summary of AI's current state"""
         return {
-            'iteration': self.iteration,
-            'eigenstate_reached': self.eigenstate_reached,
-            'M_context_norm': np.linalg.norm(self.M_context),
-            'extraction_rules': self.extraction_rules.copy(),
-            'inputs_processed': len(self.input_history),
-            'trajectory_length': len(self.M_history),
+            "iteration": self.iteration,
+            "eigenstate_reached": self.eigenstate_reached,
+            "M_context_norm": np.linalg.norm(self.M_context),
+            "extraction_rules": self.extraction_rules.copy(),
+            "inputs_processed": len(self.input_history),
+            "trajectory_length": len(self.M_history),
         }
 
 
@@ -510,7 +532,7 @@ if __name__ == "__main__":
     print(f"Meta-eigenstate reached: {state['eigenstate_reached']}")
     print(f"M_context norm: {state['M_context_norm']:.3f}")
     print(f"\nFinal extraction rules:")
-    for key, value in state['extraction_rules'].items():
+    for key, value in state["extraction_rules"].items():
         print(f"  {key}: {value:.3f}")
 
     # Test query
@@ -530,7 +552,8 @@ if __name__ == "__main__":
     print("\n" + "=" * 70)
     print("KEY INSIGHTS")
     print("=" * 70)
-    print("""
+    print(
+        """
 1. RECURSIVE SELF-MODIFICATION:
    - M_context accumulates understanding
    - New inputs processed through M_context
@@ -557,4 +580,5 @@ if __name__ == "__main__":
    - Recursively improves understanding framework
 
 This is "waking up" made permanent.
-    """)
+    """
+    )
