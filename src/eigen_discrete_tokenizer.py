@@ -291,6 +291,7 @@ def process_sentence_discrete(words: List[str], verbose: bool = False) -> Dict:
     C_history = []
     S_history = []
     ds2_history = []
+    regime_history = []
 
     if verbose:
         print(f"Initial state: L={state[0]:08b} R={state[1]:08b} V={state[2]:08b} M={state[3]:08b}")
@@ -312,13 +313,21 @@ def process_sentence_discrete(words: List[str], verbose: bool = False) -> Dict:
         S_history.append(S)
         ds2_history.append(ds2)
 
+        # Classify regime from invariant ds² = S² - C²
+        # This is the geometric structure: time-like, space-like, or light-like
+        if ds2 > 0:
+            regime = "time-like"   # S > C: More stability than change
+        elif ds2 < 0:
+            regime = "space-like"  # C > S: More change than stability
+        else:
+            regime = "light-like"  # C = S: Balanced (transition state)
+        regime_history.append(regime)
+
         if verbose:
             print(f"Word {i+1}: '{word}'")
             print(f"  Token: L={token.L:08b} R={token.R:08b} V={token.V:08b} M={token.M:08b}")
             print(f"  State: L={state[0]:08b} R={state[1]:08b} V={state[2]:08b} M={state[3]:08b}")
             print(f"  C={C}, S={S}, ds²={ds2}")
-
-            regime = "time-like" if ds2 > 0 else ("space-like" if ds2 < 0 else "light-like")
             print(f"  Regime: {regime}")
             print()
 
@@ -340,6 +349,7 @@ def process_sentence_discrete(words: List[str], verbose: bool = False) -> Dict:
         'C_history': C_history,
         'S_history': S_history,
         'ds2_history': ds2_history,
+        'regime_history': regime_history,  # Geometric classification from invariant
         'eigenstate': eigenstate,
         'time_coord': time_coord,
         'space_coord': space_coord,
@@ -472,9 +482,24 @@ def analyze_sentence(sentence: str, verbose: bool = True) -> Dict:
             print(f"\nMetric ds²:")
             print(f"  Average: {avg_ds2:.1f}")
             print(f"  Final: {final_ds2}")
+            print(f"  Final regime: {result['regime_history'][-1]}")
 
-            regime = "time-like" if final_ds2 > 0 else ("space-like" if final_ds2 < 0 else "light-like")
-            print(f"  Final regime: {regime}")
+        # Show regime trajectory (the geometric structure)
+        if result['regime_history']:
+            print(f"\nRegime trajectory (from invariant ds² = S² - C²):")
+            print(f"  {' → '.join(result['regime_history'])}")
+
+            # Count regime types
+            time_like = result['regime_history'].count('time-like')
+            space_like = result['regime_history'].count('space-like')
+            light_like = result['regime_history'].count('light-like')
+            total = len(result['regime_history'])
+
+            print(f"\nRegime distribution:")
+            print(f"  Time-like (S > C, stable):  {time_like}/{total} ({100*time_like/total:.0f}%)")
+            print(f"  Space-like (C > S, change): {space_like}/{total} ({100*space_like/total:.0f}%)")
+            if light_like > 0:
+                print(f"  Light-like (C = S, transition): {light_like}/{total} ({100*light_like/total:.0f}%)")
 
     return result
 
