@@ -44,7 +44,8 @@ setup(
     keywords="ai understanding eigenstate detection nlp semantic-analysis geometry physics",
     python_requires=">=3.8",
     install_requires=[
-        "numpy>=1.24.0",
+        "numpy>=1.24.0,<2.0.0",  # NumPy 2.0+ requires Python>=3.9
+        "spacy>=3.5.0",
     ],
     extras_require={
         "dev": [
