@@ -793,6 +793,8 @@ def understanding_loop(text: str,
                       max_iterations: int = 100,
                       method: str = 'geometric',
                       learning_rate: float = 0.1,
+                      entropy_weighted: bool = False,
+                      word_freq_model: dict = None,
                       verbose: bool = False) -> Tuple[np.ndarray, List[np.ndarray], Dict]:
     """
     Iteratively refine understanding until eigenstate
@@ -801,11 +803,11 @@ def understanding_loop(text: str,
     analogous to robot control: Q_{t+1} = Q_t - η∇ds²
 
     Process:
-    1. Extract (L, R, V) from text
+    1. Extract (L, R, V) from text (optionally with entropy weighting)
     2. Compute M = L ⊕ R ⊕ V
     3. Check if M stable (eigenstate)
     4. If not, refine and repeat
-    5. Return final M and convergence history
+    5. Return final M and convergence history with geometric metrics
 
     Parameters
     ----------
@@ -817,6 +819,12 @@ def understanding_loop(text: str,
         'geometric' or 'xor' for M computation
     learning_rate : float
         Step size for refinement (analogous to η in robot control)
+    entropy_weighted : bool
+        If True, use information density weighting (requires spacy)
+        High-entropy (rare) words get stronger signals → tighter helices
+    word_freq_model : dict, optional
+        Word → frequency mapping for entropy calculation
+        If None and entropy_weighted=True, uses character-based entropy
     verbose : bool
         Print iteration details
 
@@ -827,7 +835,12 @@ def understanding_loop(text: str,
     M_history : list of np.ndarray
         History of M at each iteration
     metrics : dict
-        Convergence metrics (iterations, alignment, regime, etc.)
+        Convergence metrics including:
+        - iterations, converged, eigenstate_type
+        - alignment_history, C_history, S_history, ds2_history, regime_history
+        - arc_length: Total distance traveled through understanding space
+        - curvature: Sum of trajectory bends (semantic ambiguity measure)
+        - orthogonality: Initial L-R-V perpendicularity score
 
     Examples
     --------
@@ -837,9 +850,26 @@ def understanding_loop(text: str,
     Iteration 1: alignment=0.985, C=1, S=299, ds²=89400, regime=time-like
     Iteration 2: alignment=0.996, C=0, S=300, ds²=90000, regime=time-like
     Eigenstate reached at iteration 2
+
+    >>> # With entropy weighting (measures semantic precision)
+    >>> M, history, metrics = understanding_loop(
+    ...     "Quantum entanglement demonstrates non-locality",
+    ...     entropy_weighted=True
+    ... )
+    >>> print(f"Arc length: {metrics['arc_length']:.6f}")  # Shorter for precise language
+    >>> print(f"Curvature: {metrics['curvature']:.6f}")    # Lower for clear concepts
     """
     # Extract initial (L, R, V)
-    triad = extract_LRV_from_sentence(text)
+    if entropy_weighted and SPACY_AVAILABLE:
+        triad = extract_LRV_syntactic_entropy_weighted(text, word_freq_model=word_freq_model)
+    else:
+        triad = extract_LRV_from_sentence(text)
+
+    # Calculate initial orthogonality (geometric quality measure)
+    LR_dot = float(np.dot(triad.L, triad.R))
+    LV_dot = float(np.dot(triad.L, triad.V))
+    RV_dot = float(np.dot(triad.R, triad.V))
+    initial_orthogonality = abs(LR_dot) + abs(LV_dot) + abs(RV_dot)
 
     M_history = []
     alignment_history = []
@@ -909,6 +939,28 @@ def understanding_loop(text: str,
     # Detect final eigenstate type
     converged, period = detect_eigenstate(M_history)
 
+    # Calculate trajectory arc length (total distance through understanding space)
+    arc_length = 0.0
+    for i in range(1, len(M_history)):
+        segment = np.linalg.norm(M_history[i] - M_history[i-1])
+        arc_length += float(segment)
+
+    # Calculate curvature (sum of trajectory bends = semantic ambiguity)
+    curvature = 0.0
+    if len(M_history) >= 3:
+        for i in range(1, len(M_history)-1):
+            v1 = M_history[i] - M_history[i-1]
+            v2 = M_history[i+1] - M_history[i]
+
+            norm1 = np.linalg.norm(v1)
+            norm2 = np.linalg.norm(v2)
+
+            if norm1 > 1e-10 and norm2 > 1e-10:
+                cos_angle = np.dot(v1, v2) / (norm1 * norm2)
+                cos_angle = np.clip(cos_angle, -1.0, 1.0)
+                angle = np.arccos(cos_angle)
+                curvature += float(angle)
+
     metrics = {
         'iterations': len(M_history),
         'converged': converged,
@@ -920,7 +972,11 @@ def understanding_loop(text: str,
         'C_history': C_history,
         'S_history': S_history,
         'ds2_history': ds2_history,
-        'regime_history': regime_history
+        'regime_history': regime_history,
+        # Geometric metrics (information curvature hypothesis)
+        'arc_length': arc_length,           # Total path length (semantic vagueness)
+        'curvature': curvature,             # Sum of bends (conceptual ambiguity)
+        'orthogonality': initial_orthogonality  # L-R-V quality (0=perfect, higher=worse)
     }
 
     return M_history[-1], M_history, metrics
