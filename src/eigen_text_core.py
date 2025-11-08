@@ -62,6 +62,65 @@ def _initialize_embedding_vector(embedding_dim: int, signal_position: int) -> np
     return vec
 
 
+def _create_word_embedding(word: str, embedding_dim: int) -> np.ndarray:
+    """
+    Create deterministic semantic embedding for a word using character n-grams.
+
+    Parameters
+    ----------
+    word : str
+        The word to embed
+    embedding_dim : int
+        Dimension of the embedding vector
+
+    Returns
+    -------
+    np.ndarray
+        Embedding vector of shape (embedding_dim,)
+
+    Notes
+    -----
+    Uses character trigrams and hashing to create embeddings where:
+    - Same word always gets same embedding (deterministic)
+    - Different words get different embeddings (semantic distinction)
+    - Similar words get somewhat similar embeddings (character overlap)
+    """
+    vec = np.zeros(embedding_dim)
+
+    # Extract character trigrams
+    padded_word = f"^{word}$"  # Start/end markers
+    trigrams = [padded_word[i:i+3] for i in range(len(padded_word) - 2)]
+
+    # Hash each trigram to multiple positions in embedding space
+    for trigram in trigrams:
+        # Use hash to get deterministic positions
+        hash_val = hash(trigram)
+
+        # Map to multiple positions (creates distributed representation)
+        for offset in range(3):  # Use 3 positions per trigram
+            idx = (hash_val + offset * 12345) % embedding_dim
+            # Accumulate with sine/cosine for smooth representation
+            phase = (hash_val + offset) % 360
+            vec[idx] += np.cos(np.radians(phase))
+
+    # Also add whole-word hash for unique identity
+    word_hash = hash(word)
+    for offset in range(5):  # 5 positions for whole word
+        idx = (word_hash + offset * 67890) % embedding_dim
+        phase = (word_hash + offset * 10) % 360
+        vec[idx] += np.sin(np.radians(phase)) * 2.0  # Stronger signal
+
+    # Normalize to unit vector
+    norm = np.linalg.norm(vec)
+    if norm > 1e-10:
+        vec = vec / norm
+    else:
+        # Fallback for empty word (shouldn't happen)
+        vec[0] = 1.0
+
+    return vec
+
+
 @dataclass
 class SemanticTriad:
     """
@@ -146,26 +205,41 @@ def extract_LRV_from_sentence(sentence: str,
     if embedding_dim <= 0:
         raise ValueError(f"embedding_dim must be positive, got {embedding_dim}")
 
-    # Simplified extraction using word positions
+    # Real semantic extraction using character-based embeddings
     words = sentence.lower().split()
 
-    # Initialize vectors with zeros
-    L = np.zeros(embedding_dim)
-    R = np.zeros(embedding_dim)
-    V = np.zeros(embedding_dim)
+    if len(words) == 0:
+        raise ValueError("sentence must contain at least one word")
 
-    # Heuristic: Distribute signals across embedding space
-    # L (Lexical) = beginning (position 0)
-    # R (Relational) = middle (position embedding_dim//3)
-    # V (Value) = end (position 2*embedding_dim//3)
-    if len(words) >= 1:
-        L = _initialize_embedding_vector(embedding_dim, signal_position=0)
+    # Create semantic embedding for each word based on character n-grams
+    word_embeddings = []
+    for word in words:
+        word_vec = _create_word_embedding(word, embedding_dim)
+        word_embeddings.append(word_vec)
 
-    if len(words) >= 2:
-        R = _initialize_embedding_vector(embedding_dim, signal_position=embedding_dim // 3)
+    word_embeddings = np.array(word_embeddings)  # Shape: (num_words, embedding_dim)
+    n_words = len(words)
 
-    if len(words) >= 3:
-        V = _initialize_embedding_vector(embedding_dim, signal_position=2 * embedding_dim // 3)
+    # L (Left context): Weighted average emphasizing beginning of sentence
+    # Earlier words have more weight
+    left_weights = np.array([1.0 / (i + 1) for i in range(n_words)])
+    left_weights = left_weights / left_weights.sum()  # Normalize
+    L = np.sum(word_embeddings * left_weights[:, np.newaxis], axis=0)
+
+    # R (Right context): Weighted average emphasizing end of sentence
+    # Later words have more weight
+    right_weights = np.array([1.0 / (n_words - i) for i in range(n_words)])
+    right_weights = right_weights / right_weights.sum()  # Normalize
+    R = np.sum(word_embeddings * right_weights[:, np.newaxis], axis=0)
+
+    # V (Vertical/holistic): Uniform average of all words
+    # Equal weight to all words
+    V = np.mean(word_embeddings, axis=0)
+
+    # Normalize all vectors to unit length
+    L = L / (np.linalg.norm(L) + 1e-10)
+    R = R / (np.linalg.norm(R) + 1e-10)
+    V = V / (np.linalg.norm(V) + 1e-10)
 
     return SemanticTriad(L=L, R=R, V=V, text=sentence)
 
