@@ -27,6 +27,19 @@ import numpy as np
 from typing import List, Tuple, Dict, Optional
 from dataclasses import dataclass
 
+# Optional: spacy for syntactic geometry extraction
+try:
+    import spacy
+    SPACY_AVAILABLE = True
+    try:
+        _nlp = spacy.load("en_core_web_sm")
+    except OSError:
+        SPACY_AVAILABLE = False
+        _nlp = None
+except ImportError:
+    SPACY_AVAILABLE = False
+    _nlp = None
+
 # Constants for embedding initialization
 MAX_NOISE_DIMENSIONS = 100  # Maximum dimensions to add noise to
 NOISE_SCALE = 0.1  # Scale factor for random noise
@@ -237,6 +250,119 @@ def extract_LRV_from_sentence(sentence: str,
     V = np.mean(word_embeddings, axis=0)
 
     # Normalize all vectors to unit length
+    L = L / (np.linalg.norm(L) + 1e-10)
+    R = R / (np.linalg.norm(R) + 1e-10)
+    V = V / (np.linalg.norm(V) + 1e-10)
+
+    return SemanticTriad(L=L, R=R, V=V, text=sentence)
+
+
+def extract_LRV_syntactic(sentence: str,
+                          embedding_dim: int = 300) -> SemanticTriad:
+    """
+    Extract (L, R, V) based on sentence's INTRINSIC syntactic structure.
+
+    Instead of imposing arbitrary weighting, this function uses the sentence's
+    own grammatical structure to determine the natural 90° basis:
+    - L = Subject (agent, doer)
+    - R = Verb (action, relation)
+    - V = Object/Complement (patient, receiver)
+
+    This is "intrinsic geometry" - the sentence creates its own measurement frame,
+    like how mass creates gravity rather than existing in absolute space.
+
+    Parameters
+    ----------
+    sentence : str
+        Input sentence
+    embedding_dim : int
+        Dimension of embedding vectors
+
+    Returns
+    -------
+    triad : SemanticTriad
+        (L, R, V) extracted from syntactic roles
+
+    Raises
+    ------
+    RuntimeError
+        If spacy is not available
+    TypeError
+        If sentence is not a string or embedding_dim is not an integer
+    ValueError
+        If sentence is empty or embedding_dim is not positive
+
+    Notes
+    -----
+    Requires spacy with en_core_web_sm model installed:
+        pip install spacy
+        python -m spacy download en_core_web_sm
+
+    Examples
+    --------
+    >>> triad = extract_LRV_syntactic("The cat sat on the mat")
+    >>> # L = embedding("cat") - subject
+    >>> # R = embedding("sat") - verb
+    >>> # V = embedding("mat") - object
+    >>> # These should be naturally ~90° apart
+    """
+    if not SPACY_AVAILABLE or _nlp is None:
+        raise RuntimeError(
+            "spacy is not available. Install with:\n"
+            "  pip install spacy\n"
+            "  python -m spacy download en_core_web_sm"
+        )
+
+    # Input validation
+    if not isinstance(sentence, str):
+        raise TypeError(f"sentence must be a string, got {type(sentence).__name__}")
+
+    if not isinstance(embedding_dim, int):
+        raise TypeError(f"embedding_dim must be an integer, got {type(embedding_dim).__name__}")
+
+    if len(sentence.strip()) == 0:
+        raise ValueError("sentence cannot be empty")
+
+    if embedding_dim <= 0:
+        raise ValueError(f"embedding_dim must be positive, got {embedding_dim}")
+
+    # Parse sentence
+    doc = _nlp(sentence)
+
+    # Find syntactic components
+    subjects = [tok for tok in doc if "subj" in tok.dep_]  # nsubj, nsubjpass, csubj
+    verbs = [tok for tok in doc if tok.pos_ == "VERB"]
+    objects = [tok for tok in doc if "obj" in tok.dep_ or tok.dep_ == "pobj"]  # dobj, pobj, iobj
+
+    # If no clear object, use complements or last noun
+    if not objects:
+        objects = [tok for tok in doc if tok.dep_ in ["attr", "acomp", "xcomp"]]
+    if not objects:
+        objects = [tok for tok in doc if tok.pos_ in ["NOUN", "PROPN"]]
+        if objects and subjects and len(objects) > 0:
+            # Remove subject from objects
+            objects = [o for o in objects if o.i != subjects[0].i]
+
+    # Extract text for each syntactic role
+    subject_text = " ".join([tok.text for tok in subjects]) if subjects else ""
+    verb_text = " ".join([tok.text for tok in verbs]) if verbs else ""
+    object_text = " ".join([tok.text for tok in objects]) if objects else ""
+
+    # Fallback to whole sentence for missing components
+    words = [tok.text for tok in doc]
+    if not subject_text:
+        subject_text = words[0] if len(words) > 0 else "empty"
+    if not verb_text:
+        verb_text = words[len(words)//2] if len(words) > 1 else subject_text
+    if not object_text:
+        object_text = words[-1] if len(words) > 0 else subject_text
+
+    # Create embeddings for each syntactic role
+    L = _create_word_embedding(subject_text.lower(), embedding_dim)
+    R = _create_word_embedding(verb_text.lower(), embedding_dim)
+    V = _create_word_embedding(object_text.lower(), embedding_dim)
+
+    # Normalize
     L = L / (np.linalg.norm(L) + 1e-10)
     R = R / (np.linalg.norm(R) + 1e-10)
     V = V / (np.linalg.norm(V) + 1e-10)
