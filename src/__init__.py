@@ -12,10 +12,13 @@ from .eigen_text_core import (
     SemanticTriad,
     understanding_loop,
     extract_LRV_from_sentence,
+    extract_LRV_syntactic,
+    extract_LRV_syntactic_entropy_weighted,
     compute_M_geometric,
     compute_M_xor,
     detect_eigenstate,
     measure_understanding_change,
+    SPACY_AVAILABLE,
 )
 
 # Recursive AI system
@@ -67,12 +70,15 @@ __all__ = [
 
     # Core utilities
     "extract_LRV_from_sentence",
+    "extract_LRV_syntactic",
+    "extract_LRV_syntactic_entropy_weighted",
     "compute_M_geometric",
     "compute_M_xor",
     "detect_eigenstate",
     "measure_understanding_change",
     "tokenize_word",
     "detect_cycle_in_trajectory",
+    "SPACY_AVAILABLE",
 
     # Domain-specific
     "analyze_em_field",
