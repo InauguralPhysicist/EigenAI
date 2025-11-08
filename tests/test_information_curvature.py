@@ -11,28 +11,53 @@ import math
 from src.eigen_text_core import (
     understanding_loop,
     extract_LRV_syntactic_entropy_weighted,
-    SPACY_AVAILABLE
+    SPACY_AVAILABLE,
 )
 
 # Skip all tests if spacy not available
 pytestmark = pytest.mark.skipif(
-    not SPACY_AVAILABLE,
-    reason="spacy required for entropy-weighted extraction"
+    not SPACY_AVAILABLE, reason="spacy required for entropy-weighted extraction"
 )
 
 # Simple word frequency model for testing
 WORD_FREQ = {
-    'the': 0.07, 'is': 0.05, 'a': 0.04, 'and': 0.03, 'to': 0.03,
-    'of': 0.02, 'in': 0.02, 'that': 0.02, 'it': 0.02, 'was': 0.01,
-    'cat': 0.0001, 'dog': 0.0001, 'dogs': 0.0001, 'bark': 0.0001,
-    'sat': 0.0001, 'mat': 0.0001, 'water': 0.0001, 'light': 0.0001,
-    'tree': 0.0001, 'apple': 0.0001, 'fell': 0.0001, 'from': 0.001,
-    'on': 0.001, 'flows': 0.0001, 'downhill': 0.0001,
-    'statement': 0.00001, 'false': 0.00001, 'true': 0.00001,
-    'both': 0.0001, 'simultaneously': 0.000001, 'this': 0.01,
-    'quantum': 0.000001, 'entanglement': 0.0000001,
-    'demonstrates': 0.00001, 'non-local': 0.0000001,
-    'correlations': 0.00001, 'phenomenon': 0.00001,
+    "the": 0.07,
+    "is": 0.05,
+    "a": 0.04,
+    "and": 0.03,
+    "to": 0.03,
+    "of": 0.02,
+    "in": 0.02,
+    "that": 0.02,
+    "it": 0.02,
+    "was": 0.01,
+    "cat": 0.0001,
+    "dog": 0.0001,
+    "dogs": 0.0001,
+    "bark": 0.0001,
+    "sat": 0.0001,
+    "mat": 0.0001,
+    "water": 0.0001,
+    "light": 0.0001,
+    "tree": 0.0001,
+    "apple": 0.0001,
+    "fell": 0.0001,
+    "from": 0.001,
+    "on": 0.001,
+    "flows": 0.0001,
+    "downhill": 0.0001,
+    "statement": 0.00001,
+    "false": 0.00001,
+    "true": 0.00001,
+    "both": 0.0001,
+    "simultaneously": 0.000001,
+    "this": 0.01,
+    "quantum": 0.000001,
+    "entanglement": 0.0000001,
+    "demonstrates": 0.00001,
+    "non-local": 0.0000001,
+    "correlations": 0.00001,
+    "phenomenon": 0.00001,
 }
 
 
@@ -56,10 +81,7 @@ def test_entropy_weighted_extraction_exists():
     """Test that entropy-weighted extraction function exists and works."""
     sentence = "The cat sat on the mat"
 
-    triad = extract_LRV_syntactic_entropy_weighted(
-        sentence,
-        word_freq_model=WORD_FREQ
-    )
+    triad = extract_LRV_syntactic_entropy_weighted(sentence, word_freq_model=WORD_FREQ)
 
     assert triad.L is not None
     assert triad.R is not None
@@ -72,16 +94,14 @@ def test_understanding_loop_with_entropy_weighting():
     sentence = "Dogs bark"
 
     M, history, metrics = understanding_loop(
-        sentence,
-        entropy_weighted=True,
-        word_freq_model=WORD_FREQ
+        sentence, entropy_weighted=True, word_freq_model=WORD_FREQ
     )
 
     assert M is not None
     assert len(history) > 0
-    assert 'arc_length' in metrics
-    assert 'curvature' in metrics
-    assert 'orthogonality' in metrics
+    assert "arc_length" in metrics
+    assert "curvature" in metrics
+    assert "orthogonality" in metrics
 
 
 def test_geometric_metrics_present():
@@ -91,19 +111,19 @@ def test_geometric_metrics_present():
     M, history, metrics = understanding_loop(sentence)
 
     # Check all geometric metrics exist
-    assert 'arc_length' in metrics
-    assert 'curvature' in metrics
-    assert 'orthogonality' in metrics
+    assert "arc_length" in metrics
+    assert "curvature" in metrics
+    assert "orthogonality" in metrics
 
     # Check they're numeric
-    assert isinstance(metrics['arc_length'], (int, float))
-    assert isinstance(metrics['curvature'], (int, float))
-    assert isinstance(metrics['orthogonality'], (int, float))
+    assert isinstance(metrics["arc_length"], (int, float))
+    assert isinstance(metrics["curvature"], (int, float))
+    assert isinstance(metrics["orthogonality"], (int, float))
 
     # Check they're non-negative
-    assert metrics['arc_length'] >= 0
-    assert metrics['curvature'] >= 0
-    assert metrics['orthogonality'] >= 0
+    assert metrics["arc_length"] >= 0
+    assert metrics["curvature"] >= 0
+    assert metrics["orthogonality"] >= 0
 
 
 def test_high_vs_low_entropy_sentences():
@@ -114,7 +134,9 @@ def test_high_vs_low_entropy_sentences():
     Low-entropy (vague) → long arc, high curvature, poor orthogonality
     """
     low_entropy_sentence = "It is"  # Very vague, common words
-    high_entropy_sentence = "Quantum entanglement demonstrates non-locality"  # Technical
+    high_entropy_sentence = (
+        "Quantum entanglement demonstrates non-locality"  # Technical
+    )
 
     # Calculate entropies
     low_ent = sentence_entropy(low_entropy_sentence)
@@ -124,15 +146,11 @@ def test_high_vs_low_entropy_sentences():
 
     # Run understanding loop with entropy weighting
     M_low, hist_low, metrics_low = understanding_loop(
-        low_entropy_sentence,
-        entropy_weighted=True,
-        word_freq_model=WORD_FREQ
+        low_entropy_sentence, entropy_weighted=True, word_freq_model=WORD_FREQ
     )
 
     M_high, hist_high, metrics_high = understanding_loop(
-        high_entropy_sentence,
-        entropy_weighted=True,
-        word_freq_model=WORD_FREQ
+        high_entropy_sentence, entropy_weighted=True, word_freq_model=WORD_FREQ
     )
 
     # Hypothesis: High-entropy → better geometry
@@ -150,7 +168,7 @@ def test_high_vs_low_entropy_sentences():
 
     # Generally expect (but don't hard-assert) these relationships:
     # High-entropy should have better orthogonality (lower score)
-    if metrics_high['orthogonality'] < metrics_low['orthogonality']:
+    if metrics_high["orthogonality"] < metrics_low["orthogonality"]:
         print("  ✓ High-entropy has better orthogonality")
 
 
@@ -174,30 +192,32 @@ def test_entropy_correlation_trend():
     for sentence in test_sentences:
         entropy = sentence_entropy(sentence)
         M, hist, metrics = understanding_loop(
-            sentence,
-            entropy_weighted=True,
-            word_freq_model=WORD_FREQ
+            sentence, entropy_weighted=True, word_freq_model=WORD_FREQ
         )
 
-        results.append({
-            'sentence': sentence,
-            'entropy': entropy,
-            'arc_length': metrics['arc_length'],
-            'curvature': metrics['curvature'],
-            'orthogonality': metrics['orthogonality']
-        })
+        results.append(
+            {
+                "sentence": sentence,
+                "entropy": entropy,
+                "arc_length": metrics["arc_length"],
+                "curvature": metrics["curvature"],
+                "orthogonality": metrics["orthogonality"],
+            }
+        )
 
     # Calculate correlation (entropy vs arc_length)
-    entropies = [r['entropy'] for r in results]
-    arc_lengths = [r['arc_length'] for r in results]
+    entropies = [r["entropy"] for r in results]
+    arc_lengths = [r["arc_length"] for r in results]
 
     if len(entropies) > 2:
         mean_e = sum(entropies) / len(entropies)
         mean_a = sum(arc_lengths) / len(arc_lengths)
 
-        numerator = sum((e - mean_e) * (a - mean_a) for e, a in zip(entropies, arc_lengths))
-        denom_e = math.sqrt(sum((e - mean_e)**2 for e in entropies))
-        denom_a = math.sqrt(sum((a - mean_a)**2 for a in arc_lengths))
+        numerator = sum(
+            (e - mean_e) * (a - mean_a) for e, a in zip(entropies, arc_lengths)
+        )
+        denom_e = math.sqrt(sum((e - mean_e) ** 2 for e in entropies))
+        denom_a = math.sqrt(sum((a - mean_a) ** 2 for a in arc_lengths))
 
         if denom_e > 0 and denom_a > 0:
             correlation = numerator / (denom_e * denom_a)
@@ -209,7 +229,9 @@ def test_entropy_correlation_trend():
             # We expect moderate to strong negative correlation
             # (not asserting hard threshold due to test variability)
             if abs(correlation) > 0.3:
-                print(f"  ✓ {'Strong' if abs(correlation) > 0.7 else 'Moderate'} correlation detected")
+                print(
+                    f"  ✓ {'Strong' if abs(correlation) > 0.7 else 'Moderate'} correlation detected"
+                )
 
 
 def test_orthogonality_improvement_with_entropy():
@@ -220,15 +242,12 @@ def test_orthogonality_improvement_with_entropy():
 
     # Without entropy weighting
     M_no_ent, hist_no_ent, metrics_no_ent = understanding_loop(
-        technical_sentence,
-        entropy_weighted=False
+        technical_sentence, entropy_weighted=False
     )
 
     # With entropy weighting
     M_ent, hist_ent, metrics_ent = understanding_loop(
-        technical_sentence,
-        entropy_weighted=True,
-        word_freq_model=WORD_FREQ
+        technical_sentence, entropy_weighted=True, word_freq_model=WORD_FREQ
     )
 
     print(f"\nTechnical sentence orthogonality:")
@@ -236,7 +255,7 @@ def test_orthogonality_improvement_with_entropy():
     print(f"  With entropy weighting:    {metrics_ent['orthogonality']:.3f}")
 
     # Entropy weighting should improve (lower) orthogonality for technical language
-    if metrics_ent['orthogonality'] < metrics_no_ent['orthogonality']:
+    if metrics_ent["orthogonality"] < metrics_no_ent["orthogonality"]:
         print("  ✓ Entropy weighting improves orthogonality")
 
 
@@ -249,12 +268,13 @@ def test_arc_length_is_path_integral():
     # Manually calculate arc length
     manual_arc = 0.0
     for i in range(1, len(history)):
-        segment = np.linalg.norm(history[i] - history[i-1])
+        segment = np.linalg.norm(history[i] - history[i - 1])
         manual_arc += segment
 
     # Should match reported arc_length
-    assert abs(metrics['arc_length'] - manual_arc) < 1e-6, \
-        "Arc length should be sum of trajectory segments"
+    assert (
+        abs(metrics["arc_length"] - manual_arc) < 1e-6
+    ), "Arc length should be sum of trajectory segments"
 
 
 def test_curvature_measures_bending():
@@ -263,18 +283,15 @@ def test_curvature_measures_bending():
     stable_sentence = "Dogs bark"
 
     # Run with more iterations to see any bending
-    M, history, metrics = understanding_loop(
-        stable_sentence,
-        max_iterations=20
-    )
+    M, history, metrics = understanding_loop(stable_sentence, max_iterations=20)
 
     # Curvature should be sum of angles
     # For nearly straight path, should be close to 0
-    assert metrics['curvature'] >= 0, "Curvature must be non-negative"
+    assert metrics["curvature"] >= 0, "Curvature must be non-negative"
 
     # If path has 3+ points, curvature calculation should work
     if len(history) >= 3:
-        assert metrics['curvature'] >= 0
+        assert metrics["curvature"] >= 0
 
 
 if __name__ == "__main__":

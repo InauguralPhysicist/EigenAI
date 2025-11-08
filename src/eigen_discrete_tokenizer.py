@@ -44,6 +44,7 @@ class DiscreteToken:
     word : str
         Original word
     """
+
     L: int
     R: int
     V: int
@@ -118,8 +119,9 @@ def tokenize_word(word: str) -> DiscreteToken:
     return DiscreteToken(L=L, R=R, V=V, M=M, word=word)
 
 
-def xor_states(state1: Tuple[int,int,int,int],
-               state2: Tuple[int,int,int,int]) -> Tuple[int,int,int,int]:
+def xor_states(
+    state1: Tuple[int, int, int, int], state2: Tuple[int, int, int, int]
+) -> Tuple[int, int, int, int]:
     """
     XOR two states component-wise
 
@@ -137,12 +139,13 @@ def xor_states(state1: Tuple[int,int,int,int],
         state1[0] ^ state2[0],  # L
         state1[1] ^ state2[1],  # R
         state1[2] ^ state2[2],  # V
-        state1[3] ^ state2[3]   # M
+        state1[3] ^ state2[3],  # M
     )
 
 
-def compute_hamming_distance(state1: Tuple[int,int,int,int],
-                             state2: Tuple[int,int,int,int]) -> int:
+def compute_hamming_distance(
+    state1: Tuple[int, int, int, int], state2: Tuple[int, int, int, int]
+) -> int:
     """
     Compute total Hamming distance between states
 
@@ -161,12 +164,13 @@ def compute_hamming_distance(state1: Tuple[int,int,int,int],
     total = 0
     for s1, s2 in zip(state1, state2):
         xor = s1 ^ s2
-        total += bin(xor).count('1')
+        total += bin(xor).count("1")
     return total
 
 
-def compute_change_stability(state_prev: Tuple[int,int,int,int],
-                             state_curr: Tuple[int,int,int,int]) -> Tuple[int, int, int]:
+def compute_change_stability(
+    state_prev: Tuple[int, int, int, int], state_curr: Tuple[int, int, int, int]
+) -> Tuple[int, int, int]:
     """
     Compute (C, S, ds²) metrics for state transition
 
@@ -191,8 +195,9 @@ def compute_change_stability(state_prev: Tuple[int,int,int,int],
     return C, S, ds2
 
 
-def detect_cycle_in_trajectory(trajectory: List[Tuple[int,int,int,int]],
-                               threshold: int = 0) -> Optional[int]:
+def detect_cycle_in_trajectory(
+    trajectory: List[Tuple[int, int, int, int]], threshold: int = 0
+) -> Optional[int]:
     """
     Detect period-k cycle in state trajectory
 
@@ -233,8 +238,7 @@ def detect_cycle_in_trajectory(trajectory: List[Tuple[int,int,int,int]],
                 break
 
             distance = compute_hamming_distance(
-                trajectory[idx_curr],
-                trajectory[idx_prev]
+                trajectory[idx_curr], trajectory[idx_prev]
             )
 
             if distance > threshold:
@@ -294,7 +298,9 @@ def process_sentence_discrete(words: List[str], verbose: bool = False) -> Dict:
     regime_history = []
 
     if verbose:
-        print(f"Initial state: L={state[0]:08b} R={state[1]:08b} V={state[2]:08b} M={state[3]:08b}")
+        print(
+            f"Initial state: L={state[0]:08b} R={state[1]:08b} V={state[2]:08b} M={state[3]:08b}"
+        )
         print()
 
     for i, word in enumerate(words):
@@ -316,7 +322,7 @@ def process_sentence_discrete(words: List[str], verbose: bool = False) -> Dict:
         # Classify regime from invariant ds² = S² - C²
         # This is the geometric structure: time-like, space-like, or light-like
         if ds2 > 0:
-            regime = "time-like"   # S > C: More stability than change
+            regime = "time-like"  # S > C: More stability than change
         elif ds2 < 0:
             regime = "space-like"  # C > S: More change than stability
         else:
@@ -325,8 +331,12 @@ def process_sentence_discrete(words: List[str], verbose: bool = False) -> Dict:
 
         if verbose:
             print(f"Word {i+1}: '{word}'")
-            print(f"  Token: L={token.L:08b} R={token.R:08b} V={token.V:08b} M={token.M:08b}")
-            print(f"  State: L={state[0]:08b} R={state[1]:08b} V={state[2]:08b} M={state[3]:08b}")
+            print(
+                f"  Token: L={token.L:08b} R={token.R:08b} V={token.V:08b} M={token.M:08b}"
+            )
+            print(
+                f"  State: L={state[0]:08b} R={state[1]:08b} V={state[2]:08b} M={state[3]:08b}"
+            )
             print(f"  C={C}, S={S}, ds²={ds2}")
             print(f"  Regime: {regime}")
             print()
@@ -343,21 +353,21 @@ def process_sentence_discrete(words: List[str], verbose: bool = False) -> Dict:
     space_coord = compute_spatial_pattern(trajectory)
 
     return {
-        'trajectory': trajectory,
-        'tokens': tokens,
-        'period': period,
-        'C_history': C_history,
-        'S_history': S_history,
-        'ds2_history': ds2_history,
-        'regime_history': regime_history,  # Geometric classification from invariant
-        'eigenstate': eigenstate,
-        'time_coord': time_coord,
-        'space_coord': space_coord,
-        'final_state': state
+        "trajectory": trajectory,
+        "tokens": tokens,
+        "period": period,
+        "C_history": C_history,
+        "S_history": S_history,
+        "ds2_history": ds2_history,
+        "regime_history": regime_history,  # Geometric classification from invariant
+        "eigenstate": eigenstate,
+        "time_coord": time_coord,
+        "space_coord": space_coord,
+        "final_state": state,
     }
 
 
-def compute_temporal_phase(state: Tuple[int,int,int,int]) -> int:
+def compute_temporal_phase(state: Tuple[int, int, int, int]) -> int:
     """
     Compute temporal coordinate (which 45° sector)
 
@@ -380,7 +390,7 @@ def compute_temporal_phase(state: Tuple[int,int,int,int]) -> int:
     return phase
 
 
-def compute_spatial_pattern(trajectory: List[Tuple[int,int,int,int]]) -> np.ndarray:
+def compute_spatial_pattern(trajectory: List[Tuple[int, int, int, int]]) -> np.ndarray:
     """
     Compute spatial oscillation pattern
 
@@ -403,7 +413,7 @@ def compute_spatial_pattern(trajectory: List[Tuple[int,int,int,int]]) -> np.ndar
     flip_counts = np.zeros(TOTAL_BITS)
 
     for i in range(1, len(trajectory)):
-        prev = trajectory[i-1]
+        prev = trajectory[i - 1]
         curr = trajectory[i]
 
         # Check each component
@@ -450,13 +460,13 @@ def analyze_sentence(sentence: str, verbose: bool = True) -> Dict:
         print(f"Words: {len(words)}")
         print(f"Trajectory length: {len(result['trajectory'])}")
 
-        if result['eigenstate']:
+        if result["eigenstate"]:
             print(f"✓ Eigenstate detected: period-{result['period']} orbit")
         else:
             print("✗ No eigenstate (trajectory doesn't close)")
 
         print(f"\nFinal state:")
-        final = result['final_state']
+        final = result["final_state"]
         print(f"  L = {final[0]:08b} ({final[0]:3d})")
         print(f"  R = {final[1]:08b} ({final[1]:3d})")
         print(f"  V = {final[2]:08b} ({final[2]:3d})")
@@ -466,40 +476,46 @@ def analyze_sentence(sentence: str, verbose: bool = True) -> Dict:
         print(f"  (45° × {result['time_coord']} = {result['time_coord'] * 45}°)")
 
         # Show which bits oscillate most
-        space = result['space_coord']
+        space = result["space_coord"]
         top_bits = np.argsort(space)[-5:][::-1]  # Top 5
         print(f"\nSpatial oscillation (top 5 bits):")
         for bit_idx in top_bits:
             component = bit_idx // BITS_PER_BYTE
             bit_pos = bit_idx % BITS_PER_BYTE
-            component_name = ['L', 'R', 'V', 'M'][component]
+            component_name = ["L", "R", "V", "M"][component]
             print(f"  {component_name}[{bit_pos}]: {int(space[bit_idx])} flips")
 
         # Summary metrics
-        if result['ds2_history']:
-            avg_ds2 = np.mean(result['ds2_history'])
-            final_ds2 = result['ds2_history'][-1]
+        if result["ds2_history"]:
+            avg_ds2 = np.mean(result["ds2_history"])
+            final_ds2 = result["ds2_history"][-1]
             print(f"\nMetric ds²:")
             print(f"  Average: {avg_ds2:.1f}")
             print(f"  Final: {final_ds2}")
             print(f"  Final regime: {result['regime_history'][-1]}")
 
         # Show regime trajectory (the geometric structure)
-        if result['regime_history']:
+        if result["regime_history"]:
             print(f"\nRegime trajectory (from invariant ds² = S² - C²):")
             print(f"  {' → '.join(result['regime_history'])}")
 
             # Count regime types
-            time_like = result['regime_history'].count('time-like')
-            space_like = result['regime_history'].count('space-like')
-            light_like = result['regime_history'].count('light-like')
-            total = len(result['regime_history'])
+            time_like = result["regime_history"].count("time-like")
+            space_like = result["regime_history"].count("space-like")
+            light_like = result["regime_history"].count("light-like")
+            total = len(result["regime_history"])
 
             print(f"\nRegime distribution:")
-            print(f"  Time-like (S > C, stable):  {time_like}/{total} ({100*time_like/total:.0f}%)")
-            print(f"  Space-like (C > S, change): {space_like}/{total} ({100*space_like/total:.0f}%)")
+            print(
+                f"  Time-like (S > C, stable):  {time_like}/{total} ({100*time_like/total:.0f}%)"
+            )
+            print(
+                f"  Space-like (C > S, change): {space_like}/{total} ({100*space_like/total:.0f}%)"
+            )
             if light_like > 0:
-                print(f"  Light-like (C = S, transition): {light_like}/{total} ({100*light_like/total:.0f}%)")
+                print(
+                    f"  Light-like (C = S, transition): {light_like}/{total} ({100*light_like/total:.0f}%)"
+                )
 
     return result
 
@@ -526,7 +542,8 @@ if __name__ == "__main__":
     print("\n" + "=" * 70)
     print("KEY INSIGHTS:")
     print("=" * 70)
-    print("""
+    print(
+        """
 1. Each word maps to unique (L,R,V,M) bit pattern
 2. XOR cascade creates trajectory through eigenspace
 3. Cycle detection finds eigenstate orbits
@@ -534,4 +551,5 @@ if __name__ == "__main__":
 5. Space = which bits oscillate
 6. ds² = S² - C² tracks regime
 7. Understanding = trajectory closure
-    """)
+    """
+    )

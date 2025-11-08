@@ -22,14 +22,15 @@ Test Strategy:
 """
 
 import sys
-sys.path.insert(0, '/home/user/EigenAI')
+
+sys.path.insert(0, "/home/user/EigenAI")
 
 import numpy as np
 from src.eigen_semantic_transformer import (
     SemanticGeometricTransformer,
     compute_grammatical_score,
     compute_ds2_semantic,
-    classify_regime
+    classify_regime,
 )
 
 
@@ -53,11 +54,9 @@ def test_grammatical_vs_ungrammatical_semantic():
         # Grammatical
         (["the", "cat", "sat"], "grammatical", "Simple valid sentence"),
         (["light", "travels", "fast"], "grammatical", "Valid sentence"),
-
         # Ungrammatical (scrambled)
         (["cat", "the", "sat"], "ungrammatical", "Scrambled words"),
         (["travels", "light", "fast"], "ungrammatical", "Wrong order"),
-
         # Nonsense (valid grammar, no meaning)
         (["the", "light", "sat"], "nonsense", "Grammatical but nonsensical"),
     ]
@@ -93,16 +92,18 @@ def test_grammatical_vs_ungrammatical_semantic():
         print(f"  ds²: {avg_ds2:.4f} [{regime}]")
         print()
 
-        results.append({
-            'text': text,
-            'category': category,
-            'eigenstate': period is not None,
-            'period': period,
-            'coherence': coherence,
-            'gram_score': gram_score,
-            'ds2': avg_ds2,
-            'regime': regime
-        })
+        results.append(
+            {
+                "text": text,
+                "category": category,
+                "eigenstate": period is not None,
+                "period": period,
+                "coherence": coherence,
+                "gram_score": gram_score,
+                "ds2": avg_ds2,
+                "regime": regime,
+            }
+        )
 
     # Analysis
     print("=" * 80)
@@ -110,17 +111,21 @@ def test_grammatical_vs_ungrammatical_semantic():
     print("=" * 80)
     print()
 
-    grammatical = [r for r in results if r['category'] == 'grammatical']
-    ungrammatical = [r for r in results if r['category'] == 'ungrammatical']
+    grammatical = [r for r in results if r["category"] == "grammatical"]
+    ungrammatical = [r for r in results if r["category"] == "ungrammatical"]
 
-    gram_avg_coherence = np.mean([r['coherence'] for r in grammatical])
-    ungram_avg_coherence = np.mean([r['coherence'] for r in ungrammatical])
+    gram_avg_coherence = np.mean([r["coherence"] for r in grammatical])
+    ungram_avg_coherence = np.mean([r["coherence"] for r in ungrammatical])
 
-    gram_avg_ds2 = np.mean([r['ds2'] for r in grammatical])
-    ungram_avg_ds2 = np.mean([r['ds2'] for r in ungrammatical])
+    gram_avg_ds2 = np.mean([r["ds2"] for r in grammatical])
+    ungram_avg_ds2 = np.mean([r["ds2"] for r in ungrammatical])
 
-    print(f"Grammatical:    avg coherence = {gram_avg_coherence:.3f}, avg ds² = {gram_avg_ds2:.4f}")
-    print(f"Ungrammatical:  avg coherence = {ungram_avg_coherence:.3f}, avg ds² = {ungram_avg_ds2:.4f}")
+    print(
+        f"Grammatical:    avg coherence = {gram_avg_coherence:.3f}, avg ds² = {gram_avg_ds2:.4f}"
+    )
+    print(
+        f"Ungrammatical:  avg coherence = {ungram_avg_coherence:.3f}, avg ds² = {ungram_avg_ds2:.4f}"
+    )
     print()
 
     # Check if there's meaningful difference
@@ -165,7 +170,6 @@ def test_semantic_coherence_semantic():
     test_cases = [
         # Coherent
         (["light", "travels", "fast"], True, "Physically coherent"),
-
         # Incoherent
         (["light", "fast", "travels"], False, "Scrambled (incoherent order)"),
     ]
@@ -194,14 +198,16 @@ def test_semantic_coherence_semantic():
         print(f"  ds²: {avg_ds2:.4f} [{regime}]")
         print()
 
-        results.append({
-            'text': text,
-            'coherent': is_coherent,
-            'eigenstate': period is not None,
-            'coherence': coherence,
-            'ds2': avg_ds2,
-            'regime': regime
-        })
+        results.append(
+            {
+                "text": text,
+                "coherent": is_coherent,
+                "eigenstate": period is not None,
+                "coherence": coherence,
+                "ds2": avg_ds2,
+                "regime": regime,
+            }
+        )
 
     # Analysis
     print("=" * 80)
@@ -209,11 +215,11 @@ def test_semantic_coherence_semantic():
     print("=" * 80)
     print()
 
-    coherent = [r for r in results if r['coherent']]
-    incoherent = [r for r in results if not r['coherent']]
+    coherent = [r for r in results if r["coherent"]]
+    incoherent = [r for r in results if not r["coherent"]]
 
-    coherent_avg = np.mean([r['coherence'] for r in coherent]) if coherent else 0
-    incoherent_avg = np.mean([r['coherence'] for r in incoherent]) if incoherent else 0
+    coherent_avg = np.mean([r["coherence"] for r in coherent]) if coherent else 0
+    incoherent_avg = np.mean([r["coherence"] for r in incoherent]) if incoherent else 0
 
     print(f"Coherent:    avg coherence = {coherent_avg:.3f}")
     print(f"Incoherent:  avg coherence = {incoherent_avg:.3f}")
@@ -306,7 +312,7 @@ def test_the_core_question_semantic():
 
     # Compare results
     coherence_diff = gram_coherence - scram_coherence
-    ds2_sign_flip = (gram_avg_ds2 < 0 and scram_avg_ds2 > 0)
+    ds2_sign_flip = gram_avg_ds2 < 0 and scram_avg_ds2 > 0
 
     print(f"Coherence difference: {coherence_diff:.3f}")
     print(f"ds² signature flip: {ds2_sign_flip}")

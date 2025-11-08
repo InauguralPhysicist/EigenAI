@@ -30,6 +30,7 @@ from dataclasses import dataclass
 # Optional: spacy for syntactic geometry extraction
 try:
     import spacy
+
     SPACY_AVAILABLE = True
     try:
         _nlp = spacy.load("en_core_web_sm")
@@ -46,7 +47,9 @@ NOISE_SCALE = 0.1  # Scale factor for random noise
 SIGNAL_STRENGTH = 1.0  # Strong signal at key positions
 
 
-def _initialize_embedding_vector(embedding_dim: int, signal_position: int) -> np.ndarray:
+def _initialize_embedding_vector(
+    embedding_dim: int, signal_position: int
+) -> np.ndarray:
     """
     Initialize an embedding vector with noise and a strong signal at a specific position.
 
@@ -102,7 +105,7 @@ def _create_word_embedding(word: str, embedding_dim: int) -> np.ndarray:
 
     # Extract character trigrams
     padded_word = f"^{word}$"  # Start/end markers
-    trigrams = [padded_word[i:i+3] for i in range(len(padded_word) - 2)]
+    trigrams = [padded_word[i : i + 3] for i in range(len(padded_word) - 2)]
 
     # Hash each trigram to multiple positions in embedding space
     for trigram in trigrams:
@@ -150,6 +153,7 @@ class SemanticTriad:
     text : str
         Original text fragment
     """
+
     L: np.ndarray
     R: np.ndarray
     V: np.ndarray
@@ -159,8 +163,7 @@ class SemanticTriad:
         return f"SemanticTriad(L={self.L.shape}, R={self.R.shape}, V={self.V.shape})"
 
 
-def extract_LRV_from_sentence(sentence: str,
-                               embedding_dim: int = 300) -> SemanticTriad:
+def extract_LRV_from_sentence(sentence: str, embedding_dim: int = 300) -> SemanticTriad:
     """
     Extract (L, R, V) from sentence
 
@@ -210,7 +213,9 @@ def extract_LRV_from_sentence(sentence: str,
         raise TypeError(f"sentence must be a string, got {type(sentence).__name__}")
 
     if not isinstance(embedding_dim, int):
-        raise TypeError(f"embedding_dim must be an integer, got {type(embedding_dim).__name__}")
+        raise TypeError(
+            f"embedding_dim must be an integer, got {type(embedding_dim).__name__}"
+        )
 
     if len(sentence.strip()) == 0:
         raise ValueError("sentence cannot be empty")
@@ -257,8 +262,7 @@ def extract_LRV_from_sentence(sentence: str,
     return SemanticTriad(L=L, R=R, V=V, text=sentence)
 
 
-def extract_LRV_syntactic(sentence: str,
-                          embedding_dim: int = 300) -> SemanticTriad:
+def extract_LRV_syntactic(sentence: str, embedding_dim: int = 300) -> SemanticTriad:
     """
     Extract (L, R, V) based on sentence's INTRINSIC syntactic structure.
 
@@ -318,7 +322,9 @@ def extract_LRV_syntactic(sentence: str,
         raise TypeError(f"sentence must be a string, got {type(sentence).__name__}")
 
     if not isinstance(embedding_dim, int):
-        raise TypeError(f"embedding_dim must be an integer, got {type(embedding_dim).__name__}")
+        raise TypeError(
+            f"embedding_dim must be an integer, got {type(embedding_dim).__name__}"
+        )
 
     if len(sentence.strip()) == 0:
         raise ValueError("sentence cannot be empty")
@@ -332,7 +338,9 @@ def extract_LRV_syntactic(sentence: str,
     # Find syntactic components
     subjects = [tok for tok in doc if "subj" in tok.dep_]  # nsubj, nsubjpass, csubj
     verbs = [tok for tok in doc if tok.pos_ == "VERB"]
-    objects = [tok for tok in doc if "obj" in tok.dep_ or tok.dep_ == "pobj"]  # dobj, pobj, iobj
+    objects = [
+        tok for tok in doc if "obj" in tok.dep_ or tok.dep_ == "pobj"
+    ]  # dobj, pobj, iobj
 
     # If no clear object, use complements or last noun
     if not objects:
@@ -353,7 +361,7 @@ def extract_LRV_syntactic(sentence: str,
     if not subject_text:
         subject_text = words[0] if len(words) > 0 else "empty"
     if not verb_text:
-        verb_text = words[len(words)//2] if len(words) > 1 else subject_text
+        verb_text = words[len(words) // 2] if len(words) > 1 else subject_text
     if not object_text:
         object_text = words[-1] if len(words) > 0 else subject_text
 
@@ -370,9 +378,9 @@ def extract_LRV_syntactic(sentence: str,
     return SemanticTriad(L=L, R=R, V=V, text=sentence)
 
 
-def extract_LRV_syntactic_entropy_weighted(sentence: str,
-                                            embedding_dim: int = 300,
-                                            word_freq_model: dict = None) -> SemanticTriad:
+def extract_LRV_syntactic_entropy_weighted(
+    sentence: str, embedding_dim: int = 300, word_freq_model: dict = None
+) -> SemanticTriad:
     """
     Extract (L, R, V) with INFORMATION DENSITY weighting.
 
@@ -416,7 +424,9 @@ def extract_LRV_syntactic_entropy_weighted(sentence: str,
     if not isinstance(sentence, str):
         raise TypeError(f"sentence must be a string, got {type(sentence).__name__}")
     if not isinstance(embedding_dim, int):
-        raise TypeError(f"embedding_dim must be an integer, got {type(embedding_dim).__name__}")
+        raise TypeError(
+            f"embedding_dim must be an integer, got {type(embedding_dim).__name__}"
+        )
     if len(sentence.strip()) == 0:
         raise ValueError("sentence cannot be empty")
     if embedding_dim <= 0:
@@ -450,7 +460,10 @@ def extract_LRV_syntactic_entropy_weighted(sentence: str,
             for c in text.lower():
                 char_counts[c] = char_counts.get(c, 0) + 1
             total = sum(char_counts.values())
-            entropy = -sum((count/total) * np.log2(count/total) for count in char_counts.values())
+            entropy = -sum(
+                (count / total) * np.log2(count / total)
+                for count in char_counts.values()
+            )
             return 1.0 + entropy / 5.0  # Normalize
         else:
             # Use word frequency model
@@ -471,9 +484,21 @@ def extract_LRV_syntactic_entropy_weighted(sentence: str,
 
     # Extract text
     words = [tok.text for tok in doc]
-    subject_text = " ".join([tok.text for tok in subjects]) if subjects else words[0] if words else "empty"
-    verb_text = " ".join([tok.text for tok in verbs]) if verbs else words[len(words)//2] if len(words) > 1 else subject_text
-    object_text = " ".join([tok.text for tok in objects]) if objects else words[-1] if words else subject_text
+    subject_text = (
+        " ".join([tok.text for tok in subjects])
+        if subjects
+        else words[0] if words else "empty"
+    )
+    verb_text = (
+        " ".join([tok.text for tok in verbs])
+        if verbs
+        else words[len(words) // 2] if len(words) > 1 else subject_text
+    )
+    object_text = (
+        " ".join([tok.text for tok in objects])
+        if objects
+        else words[-1] if words else subject_text
+    )
 
     # Create embeddings
     L_base = _create_word_embedding(subject_text.lower(), embedding_dim)
@@ -493,9 +518,7 @@ def extract_LRV_syntactic_entropy_weighted(sentence: str,
     return SemanticTriad(L=L, R=R, V=V, text=sentence)
 
 
-def compute_M_geometric(L: np.ndarray,
-                       R: np.ndarray,
-                       V: np.ndarray) -> np.ndarray:
+def compute_M_geometric(L: np.ndarray, R: np.ndarray, V: np.ndarray) -> np.ndarray:
     """
     Compute understanding vector M via geometric mean (45° bisector)
 
@@ -541,7 +564,9 @@ def compute_M_geometric(L: np.ndarray,
 
     # Shape validation
     if L.shape != R.shape or R.shape != V.shape:
-        raise ValueError(f"L, R, V must have the same shape. Got L:{L.shape}, R:{R.shape}, V:{V.shape}")
+        raise ValueError(
+            f"L, R, V must have the same shape. Got L:{L.shape}, R:{R.shape}, V:{V.shape}"
+        )
 
     # Check for NaN/Inf
     if np.any(np.isnan(L)) or np.any(np.isnan(R)) or np.any(np.isnan(V)):
@@ -554,15 +579,15 @@ def compute_M_geometric(L: np.ndarray,
 
     if norm < 1e-10:
         # Degenerate case: all vectors zero
-        raise ValueError("Cannot compute M: all input vectors are zero or nearly zero (norm < 1e-10)")
+        raise ValueError(
+            "Cannot compute M: all input vectors are zero or nearly zero (norm < 1e-10)"
+        )
 
     M = M_raw / norm
     return M
 
 
-def compute_M_xor(L: np.ndarray,
-                  R: np.ndarray,
-                  V: np.ndarray) -> np.ndarray:
+def compute_M_xor(L: np.ndarray, R: np.ndarray, V: np.ndarray) -> np.ndarray:
     """
     Compute understanding vector M via XOR (discrete case)
 
@@ -610,9 +635,9 @@ def compute_M_xor(L: np.ndarray,
     return M
 
 
-def measure_understanding_change(M_prev: np.ndarray,
-                                M_curr: np.ndarray,
-                                eps_change: float = 0.01) -> Tuple[float, int, int, int]:
+def measure_understanding_change(
+    M_prev: np.ndarray, M_curr: np.ndarray, eps_change: float = 0.01
+) -> Tuple[float, int, int, int]:
     """
     Measure how much understanding changed between iterations
 
@@ -673,9 +698,9 @@ def measure_understanding_change(M_prev: np.ndarray,
     return alignment, C, S, ds2
 
 
-def detect_eigenstate(M_history: List[np.ndarray],
-                     threshold: float = 0.99,
-                     window: int = 3) -> Tuple[bool, Optional[int]]:
+def detect_eigenstate(
+    M_history: List[np.ndarray], threshold: float = 0.99, window: int = 3
+) -> Tuple[bool, Optional[int]]:
     """
     Detect if understanding has converged to eigenstate
 
@@ -715,8 +740,7 @@ def detect_eigenstate(M_history: List[np.ndarray],
     recent_stable = True
     for i in range(1, window):
         alignment, C, S, ds2 = measure_understanding_change(
-            M_history[-i-1],
-            M_history[-i]
+            M_history[-i - 1], M_history[-i]
         )
         if alignment < threshold:
             recent_stable = False
@@ -727,7 +751,7 @@ def detect_eigenstate(M_history: List[np.ndarray],
 
     # Check for periodic orbits (period-2 through period-8)
     # Period-8 is natural from 45° × 8 = 360° closure
-    for period in range(2, min(9, len(M_history)//2)):
+    for period in range(2, min(9, len(M_history) // 2)):
         is_periodic = True
         for i in range(period):
             idx_curr = len(M_history) - 1 - i
@@ -738,8 +762,7 @@ def detect_eigenstate(M_history: List[np.ndarray],
                 break
 
             alignment, _, _, _ = measure_understanding_change(
-                M_history[idx_prev],
-                M_history[idx_curr]
+                M_history[idx_prev], M_history[idx_curr]
             )
 
             if alignment < threshold:
@@ -789,13 +812,15 @@ def analyze_understanding_regime(C: int, S: int) -> str:
         return "time-like (settled/understood)"
 
 
-def understanding_loop(text: str,
-                      max_iterations: int = 100,
-                      method: str = 'geometric',
-                      learning_rate: float = 0.1,
-                      entropy_weighted: bool = False,
-                      word_freq_model: dict = None,
-                      verbose: bool = False) -> Tuple[np.ndarray, List[np.ndarray], Dict]:
+def understanding_loop(
+    text: str,
+    max_iterations: int = 100,
+    method: str = "geometric",
+    learning_rate: float = 0.1,
+    entropy_weighted: bool = False,
+    word_freq_model: dict = None,
+    verbose: bool = False,
+) -> Tuple[np.ndarray, List[np.ndarray], Dict]:
     """
     Iteratively refine understanding until eigenstate
 
@@ -861,7 +886,9 @@ def understanding_loop(text: str,
     """
     # Extract initial (L, R, V)
     if entropy_weighted and SPACY_AVAILABLE:
-        triad = extract_LRV_syntactic_entropy_weighted(text, word_freq_model=word_freq_model)
+        triad = extract_LRV_syntactic_entropy_weighted(
+            text, word_freq_model=word_freq_model
+        )
     else:
         triad = extract_LRV_from_sentence(text)
 
@@ -882,9 +909,9 @@ def understanding_loop(text: str,
 
     for iteration in range(max_iterations):
         # Compute M
-        if method == 'geometric':
+        if method == "geometric":
             M = compute_M_geometric(L, R, V)
-        elif method == 'xor':
+        elif method == "xor":
             M = compute_M_xor(L, R, V)
         else:
             raise ValueError(f"Unknown method: {method}")
@@ -894,8 +921,7 @@ def understanding_loop(text: str,
         # Check convergence
         if len(M_history) >= 2:
             alignment, C, S, ds2 = measure_understanding_change(
-                M_history[-2],
-                M_history[-1]
+                M_history[-2], M_history[-1]
             )
             alignment_history.append(alignment)
             C_history.append(C)
@@ -906,16 +932,22 @@ def understanding_loop(text: str,
             regime_history.append(regime)
 
             if verbose:
-                print(f"Iteration {iteration}: alignment={alignment:.3f}, C={C}, S={S}, ds²={ds2}, regime={regime}")
+                print(
+                    f"Iteration {iteration}: alignment={alignment:.3f}, C={C}, S={S}, ds²={ds2}, regime={regime}"
+                )
 
             # Check for eigenstate
             converged, period = detect_eigenstate(M_history)
             if converged:
                 if verbose:
                     if period:
-                        print(f"Periodic eigenstate (period={period}) reached at iteration {iteration}")
+                        print(
+                            f"Periodic eigenstate (period={period}) reached at iteration {iteration}"
+                        )
                     else:
-                        print(f"Fixed-point eigenstate reached at iteration {iteration}")
+                        print(
+                            f"Fixed-point eigenstate reached at iteration {iteration}"
+                        )
                 break
 
         # Refine (L, R, V) based on M feedback
@@ -942,15 +974,15 @@ def understanding_loop(text: str,
     # Calculate trajectory arc length (total distance through understanding space)
     arc_length = 0.0
     for i in range(1, len(M_history)):
-        segment = np.linalg.norm(M_history[i] - M_history[i-1])
+        segment = np.linalg.norm(M_history[i] - M_history[i - 1])
         arc_length += float(segment)
 
     # Calculate curvature (sum of trajectory bends = semantic ambiguity)
     curvature = 0.0
     if len(M_history) >= 3:
-        for i in range(1, len(M_history)-1):
-            v1 = M_history[i] - M_history[i-1]
-            v2 = M_history[i+1] - M_history[i]
+        for i in range(1, len(M_history) - 1):
+            v1 = M_history[i] - M_history[i - 1]
+            v2 = M_history[i + 1] - M_history[i]
 
             norm1 = np.linalg.norm(v1)
             norm2 = np.linalg.norm(v2)
@@ -962,21 +994,23 @@ def understanding_loop(text: str,
                 curvature += float(angle)
 
     metrics = {
-        'iterations': len(M_history),
-        'converged': converged,
-        'period': period,
-        'eigenstate_type': 'periodic' if period else 'fixed-point' if converged else 'none',
-        'final_alignment': alignment_history[-1] if alignment_history else 0.0,
-        'final_regime': regime_history[-1] if regime_history else 'unknown',
-        'alignment_history': alignment_history,
-        'C_history': C_history,
-        'S_history': S_history,
-        'ds2_history': ds2_history,
-        'regime_history': regime_history,
+        "iterations": len(M_history),
+        "converged": converged,
+        "period": period,
+        "eigenstate_type": (
+            "periodic" if period else "fixed-point" if converged else "none"
+        ),
+        "final_alignment": alignment_history[-1] if alignment_history else 0.0,
+        "final_regime": regime_history[-1] if regime_history else "unknown",
+        "alignment_history": alignment_history,
+        "C_history": C_history,
+        "S_history": S_history,
+        "ds2_history": ds2_history,
+        "regime_history": regime_history,
         # Geometric metrics (information curvature hypothesis)
-        'arc_length': arc_length,           # Total path length (semantic vagueness)
-        'curvature': curvature,             # Sum of bends (conceptual ambiguity)
-        'orthogonality': initial_orthogonality  # L-R-V quality (0=perfect, higher=worse)
+        "arc_length": arc_length,  # Total path length (semantic vagueness)
+        "curvature": curvature,  # Sum of bends (conceptual ambiguity)
+        "orthogonality": initial_orthogonality,  # L-R-V quality (0=perfect, higher=worse)
     }
 
     return M_history[-1], M_history, metrics
@@ -993,10 +1027,7 @@ if __name__ == "__main__":
     print("Running understanding loop (geometric method)...")
 
     M_final, M_hist, metrics = understanding_loop(
-        text1,
-        verbose=True,
-        max_iterations=20,
-        method='geometric'
+        text1, verbose=True, max_iterations=20, method="geometric"
     )
 
     print(f"\nConvergence summary:")
@@ -1012,10 +1043,7 @@ if __name__ == "__main__":
     print("Running understanding loop (XOR method)...")
 
     M_final2, M_hist2, metrics2 = understanding_loop(
-        text1,
-        verbose=True,
-        max_iterations=20,
-        method='xor'
+        text1, verbose=True, max_iterations=20, method="xor"
     )
 
     print(f"\nConvergence summary:")
@@ -1029,13 +1057,18 @@ if __name__ == "__main__":
     print("=" * 60)
     print(f"{'Method':<15} {'Iterations':<12} {'Eigenstate':<15} {'Period':<10}")
     print("-" * 60)
-    print(f"{'Geometric':<15} {metrics['iterations']:<12} {metrics['eigenstate_type']:<15} {str(metrics['period']):<10}")
-    print(f"{'XOR':<15} {metrics2['iterations']:<12} {metrics2['eigenstate_type']:<15} {str(metrics2['period']):<10}")
+    print(
+        f"{'Geometric':<15} {metrics['iterations']:<12} {metrics['eigenstate_type']:<15} {str(metrics['period']):<10}"
+    )
+    print(
+        f"{'XOR':<15} {metrics2['iterations']:<12} {metrics2['eigenstate_type']:<15} {str(metrics2['period']):<10}"
+    )
 
     print("\n" + "=" * 60)
     print("KEY INSIGHTS")
     print("=" * 60)
-    print("""
+    print(
+        """
 1. Understanding = convergence to eigenstate
 2. Two types of eigenstates:
    - Fixed-point: M stops changing
@@ -1047,4 +1080,5 @@ if __name__ == "__main__":
 4. (L, R, V) triad captures minimal semantic structure
 5. M = L ⊕ R ⊕ V synthesizes understanding via 45° bisection
 6. 45° × 8 = 360° creates natural 8-fold eigenstate periodicity
-    """)
+    """
+    )

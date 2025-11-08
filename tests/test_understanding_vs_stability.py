@@ -28,7 +28,8 @@ This is the REAL test of whether we're measuring understanding or just stability
 """
 
 import sys
-sys.path.insert(0, '/home/user/EigenAI')
+
+sys.path.insert(0, "/home/user/EigenAI")
 
 import numpy as np
 from src.eigen_discrete_tokenizer import process_sentence_discrete
@@ -55,12 +56,10 @@ def test_grammatical_vs_ungrammatical():
         (["the", "cat", "sat"], "grammatical", "Simple valid sentence"),
         (["light", "travels", "fast"], "grammatical", "Valid sentence"),
         (["photons", "are", "particles"], "grammatical", "Valid statement"),
-
         # Ungrammatical (scrambled)
         (["cat", "the", "sat"], "ungrammatical", "Scrambled words"),
         (["travels", "light", "fast"], "ungrammatical", "Wrong order"),
         (["are", "photons", "particles"], "ungrammatical", "Scrambled"),
-
         # Nonsense (valid grammar, no meaning)
         (["the", "light", "sat"], "nonsense", "Grammatical but nonsensical"),
         (["photons", "travel", "blue"], "nonsense", "Grammar OK, meaning broken"),
@@ -80,7 +79,7 @@ def test_grammatical_vs_ungrammatical():
         print(f"{category.upper():15s} | '{text}'")
         print(f"  Description: {description}")
         print(f"  Eigenstate: {'✓' if result['period'] else '✗'} ", end="")
-        if result['period']:
+        if result["period"]:
             print(f"(period-{result['period']})")
         else:
             print()
@@ -88,13 +87,15 @@ def test_grammatical_vs_ungrammatical():
         print(f"  Stability: {metrics['stability']:.3f}")
         print()
 
-        results.append({
-            'text': text,
-            'category': category,
-            'eigenstate': result['period'] is not None,
-            'score': metrics['understanding_score'],
-            'stability': metrics['stability']
-        })
+        results.append(
+            {
+                "text": text,
+                "category": category,
+                "eigenstate": result["period"] is not None,
+                "score": metrics["understanding_score"],
+                "stability": metrics["stability"],
+            }
+        )
 
     # Analysis
     print("=" * 80)
@@ -102,13 +103,13 @@ def test_grammatical_vs_ungrammatical():
     print("=" * 80)
     print()
 
-    grammatical = [r for r in results if r['category'] == 'grammatical']
-    ungrammatical = [r for r in results if r['category'] == 'ungrammatical']
-    nonsense = [r for r in results if r['category'] == 'nonsense']
+    grammatical = [r for r in results if r["category"] == "grammatical"]
+    ungrammatical = [r for r in results if r["category"] == "ungrammatical"]
+    nonsense = [r for r in results if r["category"] == "nonsense"]
 
-    gram_avg_score = np.mean([r['score'] for r in grammatical])
-    ungram_avg_score = np.mean([r['score'] for r in ungrammatical])
-    nonsense_avg_score = np.mean([r['score'] for r in nonsense])
+    gram_avg_score = np.mean([r["score"] for r in grammatical])
+    ungram_avg_score = np.mean([r["score"] for r in ungrammatical])
+    nonsense_avg_score = np.mean([r["score"] for r in nonsense])
 
     print(f"Grammatical:    avg score = {gram_avg_score:.3f}")
     print(f"Ungrammatical:  avg score = {ungram_avg_score:.3f}")
@@ -146,7 +147,6 @@ def test_semantic_coherence():
         (["photons", "emit", "light"], True, "Physically coherent"),
         (["water", "is", "wet"], True, "Semantically coherent"),
         (["birds", "can", "fly"], True, "Generally true"),
-
         # Incoherent
         (["photons", "eat", "chairs"], False, "Physically nonsensical"),
         (["water", "is", "dry"], False, "Contradictory"),
@@ -169,12 +169,14 @@ def test_semantic_coherence():
         print(f"  Understanding score: {metrics['understanding_score']:.3f}")
         print()
 
-        results.append({
-            'text': text,
-            'coherent': is_coherent,
-            'eigenstate': result['period'] is not None,
-            'score': metrics['understanding_score']
-        })
+        results.append(
+            {
+                "text": text,
+                "coherent": is_coherent,
+                "eigenstate": result["period"] is not None,
+                "score": metrics["understanding_score"],
+            }
+        )
 
     # Analysis
     print("=" * 80)
@@ -182,11 +184,11 @@ def test_semantic_coherence():
     print("=" * 80)
     print()
 
-    coherent = [r for r in results if r['coherent']]
-    incoherent = [r for r in results if not r['coherent']]
+    coherent = [r for r in results if r["coherent"]]
+    incoherent = [r for r in results if not r["coherent"]]
 
-    coherent_avg = np.mean([r['score'] for r in coherent])
-    incoherent_avg = np.mean([r['score'] for r in incoherent])
+    coherent_avg = np.mean([r["score"] for r in coherent])
+    incoherent_avg = np.mean([r["score"] for r in incoherent])
 
     print(f"Coherent:    avg score = {coherent_avg:.3f}")
     print(f"Incoherent:  avg score = {incoherent_avg:.3f}")
@@ -229,7 +231,7 @@ def test_with_actual_embeddings():
         "light is electromagnetic waves",
         "photons are particles of light",
         "light travels very fast",
-        "photons have no mass"
+        "photons have no mass",
     ]
 
     for text in meaningful_sequence:
@@ -244,7 +246,7 @@ def test_with_actual_embeddings():
         "light is electromagnetic chairs",
         "photons are particles of sadness",
         "light travels very purple",
-        "photons have no Tuesday"
+        "photons have no Tuesday",
     ]
 
     for text in nonsense_sequence:
@@ -272,10 +274,16 @@ def test_with_actual_embeddings():
 
     print()
 
-    if state_meaningful['eigenstate_reached'] and not state_nonsense['eigenstate_reached']:
+    if (
+        state_meaningful["eigenstate_reached"]
+        and not state_nonsense["eigenstate_reached"]
+    ):
         print("✓ Meaningful converged, nonsense did not")
         print("  → Recursive AI MAY detect semantic coherence")
-    elif not state_meaningful['eigenstate_reached'] and not state_nonsense['eigenstate_reached']:
+    elif (
+        not state_meaningful["eigenstate_reached"]
+        and not state_nonsense["eigenstate_reached"]
+    ):
         print("⋯ Neither converged (need more iterations?)")
     else:
         print("✗ Both converged or wrong pattern")
@@ -323,12 +331,17 @@ def test_the_core_question():
     print("=" * 80)
     print()
 
-    if metrics_gram['understanding_score'] > metrics_scram['understanding_score'] + 0.1:
+    if metrics_gram["understanding_score"] > metrics_scram["understanding_score"] + 0.1:
         print("✓ YES - Grammatical sentence scores higher")
         print("  System CAN distinguish meaningful from scrambled")
         print()
-        print("  This suggests eigenstate detection correlates with actual understanding")
-    elif abs(metrics_gram['understanding_score'] - metrics_scram['understanding_score']) < 0.05:
+        print(
+            "  This suggests eigenstate detection correlates with actual understanding"
+        )
+    elif (
+        abs(metrics_gram["understanding_score"] - metrics_scram["understanding_score"])
+        < 0.05
+    ):
         print("✗ NO - Scores are essentially identical")
         print("  System CANNOT distinguish meaningful from scrambled")
         print()
@@ -349,7 +362,7 @@ def test_the_core_question():
     print("=" * 80)
     print()
     print("Current framework detects:")
-    print("  ✓ Token repetition (\"photon photon\" → eigenstate)")
+    print('  ✓ Token repetition ("photon photon" → eigenstate)')
     print("  ✓ Discrete geometric stability")
     print("  ✓ XOR cascade periodicity")
     print()

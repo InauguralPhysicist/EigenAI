@@ -20,7 +20,8 @@ Expected Results:
 """
 
 import sys
-sys.path.insert(0, '/home/user/EigenAI')
+
+sys.path.insert(0, "/home/user/EigenAI")
 
 import numpy as np
 from typing import Dict, List, Tuple
@@ -32,7 +33,7 @@ from src.eigen_gravity_inertia import geodesic_trajectory
 from src.eigen_quantum_xp import evolve_wavefunction
 from src.eigen_semantic_eigenstate import (
     process_text_with_eigenstates,
-    SemanticGeometricTransformer
+    SemanticGeometricTransformer,
 )
 
 
@@ -47,11 +48,7 @@ def run_physics_eigenstates() -> Dict[str, List[int]]:
     print("=" * 80)
     print()
 
-    periods = {
-        'em_field': [],
-        'gravity': [],
-        'quantum': []
-    }
+    periods = {"em_field": [], "gravity": [], "quantum": []}
 
     # EM fields (photons)
     print("Testing EM fields (photons)...")
@@ -65,7 +62,7 @@ def run_physics_eigenstates() -> Dict[str, List[int]]:
     for E, M, desc in em_cases:
         traj, period = propagate_em_field(E, M, steps=16, verbose=False)
         if period:
-            periods['em_field'].append(period)
+            periods["em_field"].append(period)
             print(f"  {desc}: period-{period}")
 
     print(f"  EM field periods: {Counter(periods['em_field'])}")
@@ -82,7 +79,7 @@ def run_physics_eigenstates() -> Dict[str, List[int]]:
     for g, a, z, desc in gravity_cases:
         traj, period = geodesic_trajectory(g, a, z, steps=16, verbose=False)
         if period:
-            periods['gravity'].append(period)
+            periods["gravity"].append(period)
             print(f"  {desc}: period-{period}")
 
     print(f"  Gravity periods: {Counter(periods['gravity'])}")
@@ -99,7 +96,7 @@ def run_physics_eigenstates() -> Dict[str, List[int]]:
     for x, p, z, desc in quantum_cases:
         traj, period = evolve_wavefunction(x, p, z, steps=16, verbose=False)
         if period:
-            periods['quantum'].append(period)
+            periods["quantum"].append(period)
             print(f"  {desc}: period-{period}")
 
     print(f"  Quantum periods: {Counter(periods['quantum'])}")
@@ -121,11 +118,7 @@ def run_text_eigenstates() -> Dict[str, List[int]]:
 
     transformer = SemanticGeometricTransformer(embedding_dim=100)
 
-    periods = {
-        'simple_coherent': [],
-        'complex_coherent': [],
-        'scrambled': []
-    }
+    periods = {"simple_coherent": [], "complex_coherent": [], "scrambled": []}
 
     # Simple coherent text (should be like photons: period-2)
     print("Testing simple coherent text (photon-like)...")
@@ -139,8 +132,8 @@ def run_text_eigenstates() -> Dict[str, List[int]]:
 
     for text in simple_texts:
         result = process_text_with_eigenstates(text, transformer)
-        if result['period']:
-            periods['simple_coherent'].append(result['period'])
+        if result["period"]:
+            periods["simple_coherent"].append(result["period"])
             print(f"  '{text}': period-{result['period']}")
 
     print(f"  Simple coherent periods: {Counter(periods['simple_coherent'])}")
@@ -158,8 +151,8 @@ def run_text_eigenstates() -> Dict[str, List[int]]:
 
     for text in complex_texts:
         result = process_text_with_eigenstates(text, transformer)
-        if result['period']:
-            periods['complex_coherent'].append(result['period'])
+        if result["period"]:
+            periods["complex_coherent"].append(result["period"])
             print(f"  '{text[:50]}...': period-{result['period']}")
 
     print(f"  Complex coherent periods: {Counter(periods['complex_coherent'])}")
@@ -178,8 +171,8 @@ def run_text_eigenstates() -> Dict[str, List[int]]:
 
     for text in scrambled_texts:
         result = process_text_with_eigenstates(text, transformer)
-        if result['period']:
-            periods['scrambled'].append(result['period'])
+        if result["period"]:
+            periods["scrambled"].append(result["period"])
             print(f"  '{text}': period-{result['period']}")
 
     print(f"  Scrambled periods: {Counter(periods['scrambled'])}")
@@ -200,13 +193,27 @@ def compare_universal_pattern(physics_periods: Dict, text_periods: Dict):
     print()
 
     # Compute average periods
-    em_avg = np.mean(physics_periods['em_field']) if physics_periods['em_field'] else 0
-    gravity_avg = np.mean(physics_periods['gravity']) if physics_periods['gravity'] else 0
-    quantum_avg = np.mean(physics_periods['quantum']) if physics_periods['quantum'] else 0
+    em_avg = np.mean(physics_periods["em_field"]) if physics_periods["em_field"] else 0
+    gravity_avg = (
+        np.mean(physics_periods["gravity"]) if physics_periods["gravity"] else 0
+    )
+    quantum_avg = (
+        np.mean(physics_periods["quantum"]) if physics_periods["quantum"] else 0
+    )
 
-    simple_avg = np.mean(text_periods['simple_coherent']) if text_periods['simple_coherent'] else 0
-    complex_avg = np.mean(text_periods['complex_coherent']) if text_periods['complex_coherent'] else 0
-    scrambled_avg = np.mean(text_periods['scrambled']) if text_periods['scrambled'] else 0
+    simple_avg = (
+        np.mean(text_periods["simple_coherent"])
+        if text_periods["simple_coherent"]
+        else 0
+    )
+    complex_avg = (
+        np.mean(text_periods["complex_coherent"])
+        if text_periods["complex_coherent"]
+        else 0
+    )
+    scrambled_avg = (
+        np.mean(text_periods["scrambled"]) if text_periods["scrambled"] else 0
+    )
 
     print("Average Periods by Domain:")
     print("-" * 80)
@@ -269,11 +276,15 @@ def compare_universal_pattern(physics_periods: Dict, text_periods: Dict):
     complexity_order = simple_avg < complex_avg < scrambled_avg
     if complexity_order:
         print("✓ TEST 4: Period length tracks complexity")
-        print(f"  Simple ({simple_avg:.1f}) < Complex ({complex_avg:.1f}) < Scrambled ({scrambled_avg:.1f})")
+        print(
+            f"  Simple ({simple_avg:.1f}) < Complex ({complex_avg:.1f}) < Scrambled ({scrambled_avg:.1f})"
+        )
         print(f"  → Correct ordering: stable < structured < chaotic")
     else:
         print("⋯ TEST 4: Period ordering")
-        print(f"  Simple: {simple_avg:.1f}, Complex: {complex_avg:.1f}, Scrambled: {scrambled_avg:.1f}")
+        print(
+            f"  Simple: {simple_avg:.1f}, Complex: {complex_avg:.1f}, Scrambled: {scrambled_avg:.1f}"
+        )
     print()
 
     # Overall verdict
@@ -283,7 +294,9 @@ def compare_universal_pattern(physics_periods: Dict, text_periods: Dict):
     print()
 
     total_tests = 4
-    passed_tests = sum([photon_match, gravity_match, chaotic_behavior, complexity_order])
+    passed_tests = sum(
+        [photon_match, gravity_match, chaotic_behavior, complexity_order]
+    )
 
     print(f"Tests passed: {passed_tests}/{total_tests}")
     print()

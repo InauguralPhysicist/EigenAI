@@ -21,7 +21,8 @@ import numpy as np
 from typing import List, Tuple, Dict, Optional
 from dataclasses import dataclass
 import sys
-sys.path.insert(0, '/home/user/EigenAI')
+
+sys.path.insert(0, "/home/user/EigenAI")
 
 
 @dataclass
@@ -36,6 +37,7 @@ class SemanticState:
 
     semantic_vec: Original semantic embedding
     """
+
     L: np.ndarray
     R: np.ndarray
     V: np.ndarray
@@ -85,40 +87,68 @@ class SemanticEmbedding:
         light_proto /= np.linalg.norm(light_proto)
 
         # Animals (variations on prototype)
-        animals = ['cat', 'dog', 'bird', 'mouse', 'fish']
+        animals = ["cat", "dog", "bird", "mouse", "fish"]
         for animal in animals:
             vec = animal_proto + 0.1 * np.random.randn(self.dim)
             self.embeddings[animal] = vec / np.linalg.norm(vec)
 
         # Actions
-        actions = ['sat', 'ran', 'jumped', 'ate', 'slept',
-                  'travels', 'moves', 'flies', 'emits', 'absorbs']
+        actions = [
+            "sat",
+            "ran",
+            "jumped",
+            "ate",
+            "slept",
+            "travels",
+            "moves",
+            "flies",
+            "emits",
+            "absorbs",
+        ]
         for action in actions:
             vec = action_proto + 0.1 * np.random.randn(self.dim)
             self.embeddings[action] = vec / np.linalg.norm(vec)
 
         # Objects
-        objects = ['mat', 'bone', 'food', 'water', 'nest',
-                  'light', 'photon', 'wave', 'particle']
+        objects = [
+            "mat",
+            "bone",
+            "food",
+            "water",
+            "nest",
+            "light",
+            "photon",
+            "wave",
+            "particle",
+        ]
         for obj in objects:
             vec = object_proto + 0.1 * np.random.randn(self.dim)
             self.embeddings[obj] = vec / np.linalg.norm(vec)
 
         # Light-related (special cluster)
-        light_words = ['light', 'photon', 'wave', 'electromagnetic']
+        light_words = ["light", "photon", "wave", "electromagnetic"]
         for word in light_words:
             vec = light_proto + 0.05 * np.random.randn(self.dim)
             self.embeddings[word] = vec / np.linalg.norm(vec)
 
         # Determiners
-        determiners = ['the', 'a', 'an']
+        determiners = ["the", "a", "an"]
         for det in determiners:
             vec = determiner_proto + 0.05 * np.random.randn(self.dim)
             self.embeddings[det] = vec / np.linalg.norm(vec)
 
         # Additional words
-        misc = ['is', 'are', 'was', 'were', 'fast', 'slow',
-               'photons', 'particles', 'waves']
+        misc = [
+            "is",
+            "are",
+            "was",
+            "were",
+            "fast",
+            "slow",
+            "photons",
+            "particles",
+            "waves",
+        ]
         for word in misc:
             vec = np.random.randn(self.dim)
             self.embeddings[word] = vec / np.linalg.norm(vec)
@@ -164,25 +194,41 @@ class SemanticGeometricTransformer:
         """Determine grammatical role of word"""
         word_lower = word.lower()
 
-        determiners = ['the', 'a', 'an', 'this', 'that']
+        determiners = ["the", "a", "an", "this", "that"]
         if word_lower in determiners:
-            return 'DET'
+            return "DET"
 
-        nouns = ['cat', 'dog', 'mat', 'bone', 'bird', 'light', 'photon', 'wave', 'particle']
+        nouns = [
+            "cat",
+            "dog",
+            "mat",
+            "bone",
+            "bird",
+            "light",
+            "photon",
+            "wave",
+            "particle",
+        ]
         if word_lower in nouns:
-            return 'NOUN'
+            return "NOUN"
 
-        verbs = ['sat', 'ran', 'jumped', 'travels', 'moves', 'is', 'are']
+        verbs = ["sat", "ran", "jumped", "travels", "moves", "is", "are"]
         if word_lower in verbs:
-            return 'VERB'
+            return "VERB"
 
-        adjectives = ['fast', 'slow', 'big', 'small']
+        adjectives = ["fast", "slow", "big", "small"]
         if word_lower in adjectives:
-            return 'ADJ'
+            return "ADJ"
 
-        return 'OTHER'
+        return "OTHER"
 
-    def transform_word(self, word: str, position: int, context: Optional[np.ndarray] = None, prev_word: Optional[str] = None) -> SemanticState:
+    def transform_word(
+        self,
+        word: str,
+        position: int,
+        context: Optional[np.ndarray] = None,
+        prev_word: Optional[str] = None,
+    ) -> SemanticState:
         """
         Transform word to semantic geometric state
 
@@ -211,11 +257,11 @@ class SemanticGeometricTransformer:
 
         # Check grammatical coherence
         grammatical_bonus = 0.0
-        if prev_role == 'DET' and role == 'NOUN':
+        if prev_role == "DET" and role == "NOUN":
             grammatical_bonus = 0.3  # "the cat" is coherent
-        elif prev_role == 'NOUN' and role == 'VERB':
+        elif prev_role == "NOUN" and role == "VERB":
             grammatical_bonus = 0.3  # "cat sat" is coherent
-        elif prev_role == 'VERB' and role == 'ADJ':
+        elif prev_role == "VERB" and role == "ADJ":
             grammatical_bonus = 0.2  # "travels fast" is okay
 
         # Project to semantic coordinates
@@ -245,25 +291,32 @@ class SemanticGeometricTransformer:
         L = x_vec * (1 + t)  # Lexical modulated by emergent time
         R = y_vec * (1 + t)  # Relational modulated by time
         V = z_vec * (1 + t)  # Value modulated by time
-        M = t                # Meta IS the emergent time
+        M = t  # Meta IS the emergent time
 
         # If context provided, blend
         if context is not None:
             context_strength = 0.3
-            L = (1 - context_strength) * L + context_strength * (context[:32] if len(context) >= 32 else np.pad(context, (0, 32 - len(context))))
-            R = (1 - context_strength) * R + context_strength * (context[:32] if len(context) >= 32 else np.pad(context, (0, 32 - len(context))))
-            V = (1 - context_strength) * V + context_strength * (context[:32] if len(context) >= 32 else np.pad(context, (0, 32 - len(context))))
+            L = (1 - context_strength) * L + context_strength * (
+                context[:32]
+                if len(context) >= 32
+                else np.pad(context, (0, 32 - len(context)))
+            )
+            R = (1 - context_strength) * R + context_strength * (
+                context[:32]
+                if len(context) >= 32
+                else np.pad(context, (0, 32 - len(context)))
+            )
+            V = (1 - context_strength) * V + context_strength * (
+                context[:32]
+                if len(context) >= 32
+                else np.pad(context, (0, 32 - len(context)))
+            )
 
-        return SemanticState(
-            L=L,
-            R=R,
-            V=V,
-            M=M,
-            semantic_vec=semantic_vec,
-            word=word
-        )
+        return SemanticState(L=L, R=R, V=V, M=M, semantic_vec=semantic_vec, word=word)
 
-    def process_sequence(self, words: List[str], verbose: bool = False) -> Tuple[List[SemanticState], Optional[int]]:
+    def process_sequence(
+        self, words: List[str], verbose: bool = False
+    ) -> Tuple[List[SemanticState], Optional[int]]:
         """
         Process sequence of words to trajectory
 
@@ -286,7 +339,9 @@ class SemanticGeometricTransformer:
         prev_word = None
 
         for i, word in enumerate(words):
-            state = self.transform_word(word, position=i, context=context, prev_word=prev_word)
+            state = self.transform_word(
+                word, position=i, context=context, prev_word=prev_word
+            )
             trajectory.append(state)
 
             # Update context (accumulate M)
@@ -365,13 +420,15 @@ class SemanticGeometricTransformer:
 
         # Metric 1: M evolution smoothness
         M_values = [state.M for state in trajectory]
-        M_diffs = [abs(M_values[i+1] - M_values[i]) for i in range(len(M_values)-1)]
+        M_diffs = [abs(M_values[i + 1] - M_values[i]) for i in range(len(M_values) - 1)]
         M_smoothness = 1.0 / (1.0 + np.std(M_diffs))
 
         # Metric 2: Semantic flow consistency
         semantic_distances = []
         for i in range(len(trajectory) - 1):
-            dist = np.linalg.norm(trajectory[i+1].semantic_vec - trajectory[i].semantic_vec)
+            dist = np.linalg.norm(
+                trajectory[i + 1].semantic_vec - trajectory[i].semantic_vec
+            )
             semantic_distances.append(dist)
 
         semantic_consistency = 1.0 / (1.0 + np.std(semantic_distances))
@@ -380,32 +437,39 @@ class SemanticGeometricTransformer:
         grammatical_score = 0.0
         for i in range(len(words) - 1):
             role = self._get_grammatical_role(words[i])
-            next_role = self._get_grammatical_role(words[i+1])
+            next_role = self._get_grammatical_role(words[i + 1])
 
             # Grammatical transitions
-            if role == 'DET' and next_role == 'NOUN':
+            if role == "DET" and next_role == "NOUN":
                 grammatical_score += 1.0  # Perfect
-            elif role == 'NOUN' and next_role == 'VERB':
+            elif role == "NOUN" and next_role == "VERB":
                 grammatical_score += 1.0  # Perfect
-            elif role == 'VERB' and next_role == 'ADJ':
+            elif role == "VERB" and next_role == "ADJ":
                 grammatical_score += 0.8  # Good
-            elif role == 'VERB' and next_role == 'NOUN':
+            elif role == "VERB" and next_role == "NOUN":
                 grammatical_score += 0.6  # Okay
             else:
                 grammatical_score += 0.1  # Bad transition
 
-        grammatical_score /= (len(words) - 1)  # Normalize
+        grammatical_score /= len(words) - 1  # Normalize
 
         # Metric 4: Eigenstate bonus
         eigenstate_bonus = 0.3 if period is not None else 0.0
 
         # Composite coherence - weighted toward grammar
-        coherence = 0.2 * M_smoothness + 0.2 * semantic_consistency + 0.5 * grammatical_score + 0.1 * eigenstate_bonus
+        coherence = (
+            0.2 * M_smoothness
+            + 0.2 * semantic_consistency
+            + 0.5 * grammatical_score
+            + 0.1 * eigenstate_bonus
+        )
 
         return coherence
 
 
-def compute_grammatical_score(words: List[str], transformer: 'SemanticGeometricTransformer') -> float:
+def compute_grammatical_score(
+    words: List[str], transformer: "SemanticGeometricTransformer"
+) -> float:
     """
     Compute just the grammatical score component
 
@@ -417,25 +481,27 @@ def compute_grammatical_score(words: List[str], transformer: 'SemanticGeometricT
     grammatical_score = 0.0
     for i in range(len(words) - 1):
         role = transformer._get_grammatical_role(words[i])
-        next_role = transformer._get_grammatical_role(words[i+1])
+        next_role = transformer._get_grammatical_role(words[i + 1])
 
         # Grammatical transitions
-        if role == 'DET' and next_role == 'NOUN':
+        if role == "DET" and next_role == "NOUN":
             grammatical_score += 1.0  # Perfect: "the cat"
-        elif role == 'NOUN' and next_role == 'VERB':
+        elif role == "NOUN" and next_role == "VERB":
             grammatical_score += 1.0  # Perfect: "cat sat"
-        elif role == 'VERB' and next_role == 'ADJ':
+        elif role == "VERB" and next_role == "ADJ":
             grammatical_score += 0.8  # Good
-        elif role == 'VERB' and next_role == 'NOUN':
+        elif role == "VERB" and next_role == "NOUN":
             grammatical_score += 0.6  # Okay
         else:
             grammatical_score += 0.1  # Bad transition
 
-    grammatical_score /= (len(words) - 1)  # Normalize
+    grammatical_score /= len(words) - 1  # Normalize
     return grammatical_score
 
 
-def compute_ds2_semantic(trajectory: List[SemanticState], grammatical_coupling: float = 1.0) -> List[float]:
+def compute_ds2_semantic(
+    trajectory: List[SemanticState], grammatical_coupling: float = 1.0
+) -> List[float]:
     """
     Compute ds² metric for semantic trajectory using coupling
 
@@ -459,7 +525,7 @@ def compute_ds2_semantic(trajectory: List[SemanticState], grammatical_coupling: 
     ds2_values = []
 
     for i in range(1, len(trajectory)):
-        prev_state = trajectory[i-1]
+        prev_state = trajectory[i - 1]
         curr_state = trajectory[i]
 
         # SPACE: Semantic distance between consecutive words
@@ -475,7 +541,7 @@ def compute_ds2_semantic(trajectory: List[SemanticState], grammatical_coupling: 
         c = c_base * grammatical_coupling
 
         # METRIC: ds² = S² - (c·T)²
-        ds2 = S**2 - (c * T)**2
+        ds2 = S**2 - (c * T) ** 2
 
         ds2_values.append(ds2)
 
@@ -529,7 +595,9 @@ def test_semantic_transformer():
         coupling_amplification = 0.5 + 4.5 * gram_score
 
         # Compute ds² metric with grammatical coupling
-        ds2_values = compute_ds2_semantic(trajectory, grammatical_coupling=coupling_amplification)
+        ds2_values = compute_ds2_semantic(
+            trajectory, grammatical_coupling=coupling_amplification
+        )
         avg_ds2 = np.mean(ds2_values) if ds2_values else 0.0
         regime = classify_regime(avg_ds2)
 
@@ -547,14 +615,16 @@ def test_semantic_transformer():
         print(f"  M trajectory: {' → '.join([f'{m:.2f}' for m in M_vals])}")
         print()
 
-        results.append({
-            'text': text,
-            'description': description,
-            'period': period,
-            'coherence': coherence,
-            'ds2': avg_ds2,
-            'regime': regime
-        })
+        results.append(
+            {
+                "text": text,
+                "description": description,
+                "period": period,
+                "coherence": coherence,
+                "ds2": avg_ds2,
+                "regime": regime,
+            }
+        )
 
     # Critical test: "the cat sat" vs "cat the sat"
     print("=" * 80)
@@ -607,17 +677,33 @@ def test_semantic_transformer():
         print("✗ Coherence: No significant difference")
 
     # Key test: Does coupling create different regimes?
-    if gram_regime == "light-like (understanding propagates)" and scram_regime != "light-like (understanding propagates)":
+    if (
+        gram_regime == "light-like (understanding propagates)"
+        and scram_regime != "light-like (understanding propagates)"
+    ):
         print("✓✓ ds² COUPLING: Perfect light-like for grammatical!")
         print("  → Understanding propagates at light speed")
-        print("  → Coupling constant from grammatical structure creates photon-like behavior")
-    elif gram_regime == "time-like (tokens converging)" and scram_regime == "space-like (tokens diverging)":
-        print("✓ ds² COUPLING: Metric signature FLIPS between grammatical and scrambled!")
-        print(f"  Grammatical: ds² = {gram_avg_ds2:.4f} (time-like, converging toward understanding)")
-        print(f"  Scrambled:   ds² = {scram_avg_ds2:.4f} (space-like, causally disconnected)")
+        print(
+            "  → Coupling constant from grammatical structure creates photon-like behavior"
+        )
+    elif (
+        gram_regime == "time-like (tokens converging)"
+        and scram_regime == "space-like (tokens diverging)"
+    ):
+        print(
+            "✓ ds² COUPLING: Metric signature FLIPS between grammatical and scrambled!"
+        )
+        print(
+            f"  Grammatical: ds² = {gram_avg_ds2:.4f} (time-like, converging toward understanding)"
+        )
+        print(
+            f"  Scrambled:   ds² = {scram_avg_ds2:.4f} (space-like, causally disconnected)"
+        )
         print()
         print("  KEY INSIGHT:")
-        print("  - Strong grammatical coupling (5x) → negative ds² → understanding converges")
+        print(
+            "  - Strong grammatical coupling (5x) → negative ds² → understanding converges"
+        )
         print("  - Weak scrambled coupling (1x) → positive ds² → no understanding")
         print()
         print("  This is EXACTLY like general relativity:")

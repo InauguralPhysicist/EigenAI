@@ -25,13 +25,14 @@ from src.eigen_text_core import (
     compute_M_xor,
     measure_understanding_change,
     detect_eigenstate,
-    understanding_loop
+    understanding_loop,
 )
 
 
 # =============================================================================
 # FALSIFICATION TESTS - Try to break the "eigenstate = understanding" claim
 # =============================================================================
+
 
 def test_random_noise_should_not_converge():
     """
@@ -50,10 +51,7 @@ def test_random_noise_should_not_converge():
     random_gibberish = "xkqz mplv jfgh wert yuio asdf qwer"
 
     M_final, M_history, metrics = understanding_loop(
-        random_gibberish,
-        max_iterations=100,
-        method='geometric',
-        verbose=False
+        random_gibberish, max_iterations=100, method="geometric", verbose=False
     )
 
     # Record what happens for analysis
@@ -89,10 +87,14 @@ def test_contradictory_statements():
     )
 
     print(f"\nContradiction test:")
-    print(f"  Contradiction converged: {metrics_contra['converged']} "
-          f"in {metrics_contra['iterations']} iterations")
-    print(f"  Coherent converged: {metrics_coherent['converged']} "
-          f"in {metrics_coherent['iterations']} iterations")
+    print(
+        f"  Contradiction converged: {metrics_contra['converged']} "
+        f"in {metrics_contra['iterations']} iterations"
+    )
+    print(
+        f"  Coherent converged: {metrics_coherent['converged']} "
+        f"in {metrics_coherent['iterations']} iterations"
+    )
 
     # Document behavior - does contradiction show different pattern?
     # This is exploratory - we're learning what the framework does
@@ -121,12 +123,16 @@ def test_memorization_vs_understanding():
     )
 
     print(f"\nMemorization vs Understanding:")
-    print(f"  Repetition: converged={metrics_rep['converged']}, "
-          f"iterations={metrics_rep['iterations']}, "
-          f"type={metrics_rep.get('eigenstate_type', 'none')}")
-    print(f"  Meaningful: converged={metrics_mean['converged']}, "
-          f"iterations={metrics_mean['iterations']}, "
-          f"type={metrics_mean.get('eigenstate_type', 'none')}")
+    print(
+        f"  Repetition: converged={metrics_rep['converged']}, "
+        f"iterations={metrics_rep['iterations']}, "
+        f"type={metrics_rep.get('eigenstate_type', 'none')}"
+    )
+    print(
+        f"  Meaningful: converged={metrics_mean['converged']}, "
+        f"iterations={metrics_mean['iterations']}, "
+        f"type={metrics_mean.get('eigenstate_type', 'none')}"
+    )
 
     # What distinguishes them? This is an open research question
     # Document observed differences
@@ -161,6 +167,7 @@ def test_grammatical_vs_ungrammatical():
 # MATHEMATICAL PROPERTY TESTS - These MUST hold if theory is correct
 # =============================================================================
 
+
 def test_M_geometric_always_normalized():
     """
     MATHEMATICAL INVARIANT: M must always be a unit vector
@@ -180,8 +187,7 @@ def test_M_geometric_always_normalized():
         M = compute_M_geometric(L, R, V)
         norm = np.linalg.norm(M)
 
-        assert abs(norm - 1.0) < 1e-10, \
-            f"Test {i}: M not normalized! norm={norm}"
+        assert abs(norm - 1.0) < 1e-10, f"Test {i}: M not normalized! norm={norm}"
 
 
 def test_eigenstate_implies_trajectory_stability():
@@ -195,7 +201,7 @@ def test_eigenstate_implies_trajectory_stability():
     test_cases = [
         "Water flows downhill",
         "Light travels fast",
-        "The earth orbits the sun"
+        "The earth orbits the sun",
     ]
 
     for text in test_cases:
@@ -203,16 +209,17 @@ def test_eigenstate_implies_trajectory_stability():
             text, max_iterations=100, verbose=False
         )
 
-        if metrics['converged']:
+        if metrics["converged"]:
             # If eigenstate claimed, last several vectors should be very similar
             last_10 = M_history[-10:]
 
             for i in range(len(last_10) - 1):
-                alignment = np.dot(last_10[i], last_10[i+1])
+                alignment = np.dot(last_10[i], last_10[i + 1])
 
-                assert alignment > 0.90, \
-                    f"Eigenstate claimed for '{text}' but trajectory unstable! " \
+                assert alignment > 0.90, (
+                    f"Eigenstate claimed for '{text}' but trajectory unstable! "
                     f"Alignment at step {i}: {alignment}"
+                )
 
 
 def test_convergence_is_monotonic_improvement():
@@ -231,21 +238,21 @@ def test_convergence_is_monotonic_improvement():
     # Check alignment between consecutive states
     alignments = []
     for i in range(1, len(M_history)):
-        alignment = np.dot(M_history[i-1], M_history[i])
+        alignment = np.dot(M_history[i - 1], M_history[i])
         alignments.append(alignment)
 
     # After some initial variation, should trend toward stability
     # Last 10 should all be high (>0.8) if converged
-    if metrics['converged']:
+    if metrics["converged"]:
         last_10_alignments = alignments[-10:]
         for i, align in enumerate(last_10_alignments):
-            assert align > 0.8, \
-                f"Converged but unstable: alignment[{i}] = {align}"
+            assert align > 0.8, f"Converged but unstable: alignment[{i}] = {align}"
 
 
 # =============================================================================
 # ERROR HANDLING TESTS - Verify validation works
 # =============================================================================
+
 
 def test_extract_LRV_rejects_empty_string():
     """Input validation: Empty strings should be rejected"""
@@ -287,11 +294,7 @@ def test_compute_M_geometric_rejects_mismatched_shapes():
 def test_compute_M_geometric_rejects_zero_vectors():
     """Input validation: All-zero vectors should be rejected"""
     with pytest.raises(ValueError, match="zero or nearly zero"):
-        compute_M_geometric(
-            np.zeros(3),
-            np.zeros(3),
-            np.zeros(3)
-        )
+        compute_M_geometric(np.zeros(3), np.zeros(3), np.zeros(3))
 
 
 def test_compute_M_geometric_rejects_nan():
@@ -318,6 +321,7 @@ def test_compute_M_geometric_rejects_inf():
 # EDGE CASE TESTS - Boundary conditions
 # =============================================================================
 
+
 def test_single_word_sentence():
     """Edge case: Single word should work without error"""
     triad = extract_LRV_from_sentence("Hello", embedding_dim=100)
@@ -331,25 +335,17 @@ def test_very_long_sentence():
     """Edge case: Very long text should not crash"""
     long_text = " ".join(["word"] * 1000)
 
-    M, hist, metrics = understanding_loop(
-        long_text,
-        max_iterations=50,
-        verbose=False
-    )
+    M, hist, metrics = understanding_loop(long_text, max_iterations=50, verbose=False)
 
     assert len(M) > 0
-    assert 'converged' in metrics
+    assert "converged" in metrics
 
 
 def test_special_characters():
     """Edge case: Special characters should be handled"""
     special = "Hello! How are you? I'm fine. #test @user"
 
-    M, hist, metrics = understanding_loop(
-        special,
-        max_iterations=50,
-        verbose=False
-    )
+    M, hist, metrics = understanding_loop(special, max_iterations=50, verbose=False)
 
     assert len(M) > 0
 
@@ -365,6 +361,7 @@ def test_unicode_text():
 # =============================================================================
 # INTEGRATION TESTS - Full pipeline
 # =============================================================================
+
 
 def test_full_pipeline_runs_end_to_end():
     """Integration: Complete pipeline should work without errors"""
@@ -383,8 +380,8 @@ def test_full_pipeline_runs_end_to_end():
     # Step 4: Verify results
     assert len(history) > 0
     assert M_final is not None
-    assert 'converged' in metrics
-    assert 'iterations' in metrics
+    assert "converged" in metrics
+    assert "iterations" in metrics
 
 
 def test_discrete_vs_continuous_consistency():
@@ -404,26 +401,31 @@ def test_discrete_vs_continuous_consistency():
 
     for text in test_sentences:
         M_geo, _, metrics_geo = understanding_loop(
-            text, method='geometric', max_iterations=50, verbose=False
+            text, method="geometric", max_iterations=50, verbose=False
         )
 
         M_xor, _, metrics_xor = understanding_loop(
-            text, method='xor', max_iterations=50, verbose=False
+            text, method="xor", max_iterations=50, verbose=False
         )
 
         # Do both agree on convergence?
-        both_converged = metrics_geo['converged'] and metrics_xor['converged']
-        neither_converged = (not metrics_geo['converged'] and
-                           not metrics_xor['converged'])
+        both_converged = metrics_geo["converged"] and metrics_xor["converged"]
+        neither_converged = (
+            not metrics_geo["converged"] and not metrics_xor["converged"]
+        )
 
         if both_converged or neither_converged:
             agreement_count += 1
         else:
             print(f"\nMethods disagree on: '{text}'")
-            print(f"  Geometric: converged={metrics_geo['converged']}, "
-                  f"iterations={metrics_geo['iterations']}")
-            print(f"  XOR: converged={metrics_xor['converged']}, "
-                  f"iterations={metrics_xor['iterations']}")
+            print(
+                f"  Geometric: converged={metrics_geo['converged']}, "
+                f"iterations={metrics_geo['iterations']}"
+            )
+            print(
+                f"  XOR: converged={metrics_xor['converged']}, "
+                f"iterations={metrics_xor['iterations']}"
+            )
 
     # Document agreement rate
     agreement_rate = agreement_count / len(test_sentences)

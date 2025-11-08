@@ -56,18 +56,15 @@ except ImportError:
 __all__ = [
     # Version
     "__version__",
-
     # Core classes
     "SemanticTriad",
     "RecursiveEigenAI",
     "RecursiveState",
     "DiscreteToken",
-
     # Main functions
     "understanding_loop",
     "process_sentence_discrete",
     "analyze_sentence",
-
     # Core utilities
     "extract_LRV_from_sentence",
     "extract_LRV_syntactic",
@@ -79,7 +76,6 @@ __all__ = [
     "tokenize_word",
     "detect_cycle_in_trajectory",
     "SPACY_AVAILABLE",
-
     # Domain-specific
     "analyze_em_field",
     "geodesic_trajectory",

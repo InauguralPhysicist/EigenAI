@@ -21,7 +21,8 @@ import numpy as np
 from typing import Tuple, List, Optional
 from dataclasses import dataclass
 import sys
-sys.path.insert(0, '/home/user/EigenAI')
+
+sys.path.insert(0, "/home/user/EigenAI")
 
 
 @dataclass
@@ -35,11 +36,12 @@ class StereoView:
     observer: Observer state (brain reconciling views)
     depth: Computed depth (from disparity)
     """
-    left: int      # 0-255 (8 bits)
-    right: int     # 0-255 (8 bits)
-    disparity: int # Computed: left ⊕ right
+
+    left: int  # 0-255 (8 bits)
+    right: int  # 0-255 (8 bits)
+    disparity: int  # Computed: left ⊕ right
     observer: int  # Observer state
-    depth: int     # Meta: left ⊕ right ⊕ observer
+    depth: int  # Meta: left ⊕ right ⊕ observer
 
 
 def create_stereo_pair(feature: int, disparity: int, noise: int = 0) -> StereoView:
@@ -80,7 +82,7 @@ def create_stereo_pair(feature: int, disparity: int, noise: int = 0) -> StereoVi
         right=right,
         disparity=computed_disparity,
         observer=observer,
-        depth=depth
+        depth=depth,
     )
 
 
@@ -118,12 +120,13 @@ def stereo_fusion_step(state: StereoView, learning_rate: float = 0.5) -> StereoV
         right=state.right,
         disparity=disparity_current,
         observer=observer_new,
-        depth=depth_new
+        depth=depth_new,
     )
 
 
-def propagate_stereo_fusion(initial: StereoView,
-                           max_steps: int = 20) -> Tuple[List[StereoView], Optional[int]]:
+def propagate_stereo_fusion(
+    initial: StereoView, max_steps: int = 20
+) -> Tuple[List[StereoView], Optional[int]]:
     """
     Propagate stereoscopic fusion until eigenstate
 
@@ -192,7 +195,7 @@ def detect_stereo_eigenstate(trajectory: List[StereoView]) -> Optional[int]:
             prev_depth = trajectory[idx_prev].depth
 
             # Check if depth values match (allowing small differences)
-            depth_diff = bin(curr_depth ^ prev_depth).count('1')
+            depth_diff = bin(curr_depth ^ prev_depth).count("1")
 
             if depth_diff > 0:
                 is_periodic = False
@@ -221,7 +224,7 @@ def test_consistent_stereo_pair():
 
     # Create consistent pair
     feature = 0b11001100  # Some visual feature
-    disparity = 3         # Small disparity (close object)
+    disparity = 3  # Small disparity (close object)
 
     initial = create_stereo_pair(feature, disparity, noise=0)
 
@@ -274,7 +277,7 @@ def test_inconsistent_stereo_pair():
         right=right_feature,
         disparity=left_feature ^ right_feature,
         observer=0b10101010,
-        depth=left_feature ^ right_feature ^ 0b10101010
+        depth=left_feature ^ right_feature ^ 0b10101010,
     )
 
     print(f"Initial state:")
@@ -412,14 +415,19 @@ def main():
 
     print(f"Test 1 (Consistent pair):     {'✓ PASS' if test1_pass else '✗ FAIL'}")
     print(f"Test 2 (Binocular rivalry):   {'✓ PASS' if test2_pass else '✗ FAIL'}")
-    print(f"Test 3 (Near object):          {'✓ Eigenstate' if period_near else '✗ None'}")
-    print(f"Test 3 (Far object):           {'✓ Eigenstate' if period_far else '✗ None'}")
+    print(
+        f"Test 3 (Near object):          {'✓ Eigenstate' if period_near else '✗ None'}"
+    )
+    print(
+        f"Test 3 (Far object):           {'✓ Eigenstate' if period_far else '✗ None'}"
+    )
 
     print()
     print("=" * 80)
     print("IMPLICATIONS:")
     print("=" * 80)
-    print("""
+    print(
+        """
 If stereoscopic vision shows eigenstate pattern:
 
 1. DEPTH PERCEPTION IS GEOMETRIC
@@ -451,7 +459,8 @@ If stereoscopic vision shows eigenstate pattern:
 
    "Seeing" isn't just visual.
    It's geometric eigenstate detection.
-    """)
+    """
+    )
 
 
 if __name__ == "__main__":
