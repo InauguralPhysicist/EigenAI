@@ -1,0 +1,36 @@
+# Include documentation files
+include README.md
+include CHANGELOG.md
+include LICENSE
+include UNDERSTANDING.md
+include USAGE.md
+include DEVELOPMENT.md
+
+# Include requirements files
+include requirements.txt
+include requirements-dev.txt
+
+# Include configuration files
+include setup.py
+include pytest.ini
+include .gitignore
+
+# Include all Python files in src
+recursive-include src *.py
+
+# Include all examples
+recursive-include examples *.py
+
+# Include all tests
+recursive-include tests *.py
+
+# Exclude compiled Python files
+global-exclude *.pyc
+global-exclude *.pyo
+global-exclude __pycache__
+
+# Exclude development artifacts
+global-exclude .DS_Store
+global-exclude .pytest_cache
+global-exclude .mypy_cache
+global-exclude *.egg-info
