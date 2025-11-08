@@ -4,6 +4,8 @@
 
 [![Status](https://img.shields.io/badge/status-active-success.svg)]()
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)]()
+[![Tests](https://github.com/InauguralPhysicist/EigenAI/workflows/Tests/badge.svg)](https://github.com/InauguralPhysicist/EigenAI/actions)
+[![Code Quality](https://github.com/InauguralPhysicist/EigenAI/workflows/Code%20Quality/badge.svg)](https://github.com/InauguralPhysicist/EigenAI/actions)
 
 ---
 
