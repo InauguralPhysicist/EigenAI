@@ -370,6 +370,129 @@ def extract_LRV_syntactic(sentence: str,
     return SemanticTriad(L=L, R=R, V=V, text=sentence)
 
 
+def extract_LRV_syntactic_entropy_weighted(sentence: str,
+                                            embedding_dim: int = 300,
+                                            word_freq_model: dict = None) -> SemanticTriad:
+    """
+    Extract (L, R, V) with INFORMATION DENSITY weighting.
+
+    This implements the "information curvature" hypothesis:
+    - Rare words (high entropy) create stronger semantic signals
+    - Common words (low entropy) contribute less
+    - Result: High-entropy sentences create "curved" semantic space
+    - Geodesics through curved space require more iterations
+
+    This tests the prediction: iterations ∝ √(semantic_entropy · F / coherence)
+
+    Parameters
+    ----------
+    sentence : str
+        Input sentence
+    embedding_dim : int
+        Dimension of embedding vectors
+    word_freq_model : dict, optional
+        Word → frequency mapping. If None, uses character-based entropy.
+
+    Returns
+    -------
+    triad : SemanticTriad
+        (L, R, V) with entropy-weighted embeddings
+
+    Notes
+    -----
+    Information content (entropy) of word w:
+        h(w) = -log₂(P(w))
+
+    Higher h(w) → rarer word → stronger contribution to L, R, V
+    """
+    if not SPACY_AVAILABLE or _nlp is None:
+        raise RuntimeError(
+            "spacy is not available. Install with:\n"
+            "  pip install spacy\n"
+            "  python -m spacy download en_core_web_sm"
+        )
+
+    # Input validation
+    if not isinstance(sentence, str):
+        raise TypeError(f"sentence must be a string, got {type(sentence).__name__}")
+    if not isinstance(embedding_dim, int):
+        raise TypeError(f"embedding_dim must be an integer, got {type(embedding_dim).__name__}")
+    if len(sentence.strip()) == 0:
+        raise ValueError("sentence cannot be empty")
+    if embedding_dim <= 0:
+        raise ValueError(f"embedding_dim must be positive, got {embedding_dim}")
+
+    # Parse sentence
+    doc = _nlp(sentence)
+
+    # Find syntactic components
+    subjects = [tok for tok in doc if "subj" in tok.dep_]
+    verbs = [tok for tok in doc if tok.pos_ == "VERB"]
+    objects = [tok for tok in doc if "obj" in tok.dep_ or tok.dep_ == "pobj"]
+
+    # Fallbacks
+    if not objects:
+        objects = [tok for tok in doc if tok.dep_ in ["attr", "acomp", "xcomp"]]
+    if not objects:
+        objects = [tok for tok in doc if tok.pos_ in ["NOUN", "PROPN"]]
+        if objects and subjects and len(objects) > 0:
+            objects = [o for o in objects if o.i != subjects[0].i]
+
+    # Extract text and calculate entropy weights
+    def get_entropy_weight(tokens, word_freq_model):
+        if not tokens:
+            return 1.0
+        if word_freq_model is None:
+            # Use character-based entropy as fallback
+            text = " ".join([t.text for t in tokens])
+            # Entropy from character distribution
+            char_counts = {}
+            for c in text.lower():
+                char_counts[c] = char_counts.get(c, 0) + 1
+            total = sum(char_counts.values())
+            entropy = -sum((count/total) * np.log2(count/total) for count in char_counts.values())
+            return 1.0 + entropy / 5.0  # Normalize
+        else:
+            # Use word frequency model
+            entropies = []
+            for tok in tokens:
+                word = tok.text.lower()
+                freq = word_freq_model.get(word, 1e-7)  # Unknown words are rare
+                entropy = -np.log2(freq) if freq > 0 else 20.0
+                entropies.append(entropy)
+            avg_entropy = sum(entropies) / len(entropies) if entropies else 15.0
+            # Normalize: 15 bits = 1x, higher = more weight
+            return avg_entropy / 15.0
+
+    # Calculate weights
+    subject_weight = get_entropy_weight(subjects, word_freq_model)
+    verb_weight = get_entropy_weight(verbs, word_freq_model)
+    object_weight = get_entropy_weight(objects, word_freq_model)
+
+    # Extract text
+    words = [tok.text for tok in doc]
+    subject_text = " ".join([tok.text for tok in subjects]) if subjects else words[0] if words else "empty"
+    verb_text = " ".join([tok.text for tok in verbs]) if verbs else words[len(words)//2] if len(words) > 1 else subject_text
+    object_text = " ".join([tok.text for tok in objects]) if objects else words[-1] if words else subject_text
+
+    # Create embeddings
+    L_base = _create_word_embedding(subject_text.lower(), embedding_dim)
+    R_base = _create_word_embedding(verb_text.lower(), embedding_dim)
+    V_base = _create_word_embedding(object_text.lower(), embedding_dim)
+
+    # Apply entropy weighting (amplify high-information components)
+    L = L_base * subject_weight
+    R = R_base * verb_weight
+    V = V_base * object_weight
+
+    # Normalize to unit vectors
+    L = L / (np.linalg.norm(L) + 1e-10)
+    R = R / (np.linalg.norm(R) + 1e-10)
+    V = V / (np.linalg.norm(V) + 1e-10)
+
+    return SemanticTriad(L=L, R=R, V=V, text=sentence)
+
+
 def compute_M_geometric(L: np.ndarray,
                        R: np.ndarray,
                        V: np.ndarray) -> np.ndarray:
