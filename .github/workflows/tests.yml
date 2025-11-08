@@ -43,8 +43,9 @@ jobs:
 
     # Step 4: Run tests with pytest
     - name: Run tests
+      env:
+        PYTHONPATH: ${{ github.workspace }}
       run: |
-        export PYTHONPATH="${PYTHONPATH}:${GITHUB_WORKSPACE}"
         python -m pytest -v --cov=src --cov-report=term
 
     # Step 5: Check if tests passed
