@@ -13,7 +13,8 @@ with open("README.md", "r", encoding="utf-8") as fh:
 setup(
     name="eigenai",
     version="0.1.0",
-    author="Your Name",  # Update with your name
+    author="Jon McReynolds",
+    author_email="mcreynolds.jon@gmail.com",
     description="A framework for measuring AI understanding through eigenstate detection",
     long_description=long_description,
     long_description_content_type="text/markdown",
