@@ -162,28 +162,30 @@ def test_light_like_is_transitional():
             print(f"  Step {idx}: ds²={ds2_values[idx]}")
 
 
-def test_regime_should_be_in_output():
+def test_regime_history_in_output():
     """
-    MISSING FEATURE TEST: Regime classification should be in output
+    Test that regime classification IS in output (FIXED!)
 
-    Currently we have to compute it from ds2_history.
-    Should be explicit in results.
+    Regime history is now explicitly tokenized as part of the output,
+    giving direct access to the geometric structure.
     """
     result = analyze_sentence("Test sentence", verbose=False)
 
-    # What we have:
+    # We have ds2_history:
     assert 'ds2_history' in result  # ✓
 
-    # What we DON'T have but SHOULD:
-    assert 'regime_history' not in result  # This should exist!
+    # We NOW have regime_history (FIXED!):
+    assert 'regime_history' in result  # ✓ Now exists!
 
-    # Manual computation works:
-    regime_history = [classify_regime(ds2) for ds2 in result['ds2_history']]
-    assert len(regime_history) > 0
+    # They should match
+    regime_from_output = result['regime_history']
+    regime_from_ds2 = [classify_regime(ds2) for ds2 in result['ds2_history']]
 
-    print("\n⚠ MISSING: 'regime_history' not in output")
-    print("Should add to process_sentence_discrete() return value")
-    print(f"Computed manually: {regime_history}")
+    assert regime_from_output == regime_from_ds2
+
+    print(f"\n✓ FIXED: 'regime_history' now in output")
+    print(f"  Direct access: {regime_from_output}")
+    print(f"  Matches ds² computation: {regime_from_output == regime_from_ds2}")
 
 
 def test_extreme_regimes():
