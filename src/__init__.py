@@ -5,7 +5,7 @@ This package provides tools for analyzing semantic understanding through
 geometric eigenstate detection in text and other domains.
 """
 
-__version__ = "0.1.0"
+__version__ = "1.0.0"
 
 # Core text understanding
 from .eigen_text_core import (
