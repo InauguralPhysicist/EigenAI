@@ -27,7 +27,9 @@ This unifies all our findings:
 """
 
 import sys
-sys.path.insert(0, '/home/user/EigenAI')
+# Add project root to path (works in any environment)
+import os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import numpy as np
 from typing import Dict, List, Tuple
