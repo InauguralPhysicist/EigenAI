@@ -70,6 +70,13 @@ def extract_LRV_from_sentence(sentence: str,
     triad : SemanticTriad
         Extracted (L, R, V) coordinates
 
+    Raises
+    ------
+    TypeError
+        If sentence is not a string or embedding_dim is not an integer
+    ValueError
+        If sentence is empty or embedding_dim is not positive
+
     Examples
     --------
     >>> triad = extract_LRV_from_sentence("The wind bends the tree")
@@ -92,6 +99,19 @@ def extract_LRV_from_sentence(sentence: str,
     obj = [tok for tok in doc if tok.dep_ == "dobj"]
     ```
     """
+    # Input validation
+    if not isinstance(sentence, str):
+        raise TypeError(f"sentence must be a string, got {type(sentence).__name__}")
+
+    if not isinstance(embedding_dim, int):
+        raise TypeError(f"embedding_dim must be an integer, got {type(embedding_dim).__name__}")
+
+    if len(sentence.strip()) == 0:
+        raise ValueError("sentence cannot be empty")
+
+    if embedding_dim <= 0:
+        raise ValueError(f"embedding_dim must be positive, got {embedding_dim}")
+
     # Simplified extraction using word positions
     words = sentence.lower().split()
 
@@ -138,6 +158,13 @@ def compute_M_geometric(L: np.ndarray,
     M : np.ndarray
         Understanding vector (normalized)
 
+    Raises
+    ------
+    TypeError
+        If L, R, or V are not numpy arrays
+    ValueError
+        If L, R, V have different shapes or contain NaN/Inf values
+
     Notes
     -----
     The 45° angle ensures M is balanced:
@@ -148,12 +175,30 @@ def compute_M_geometric(L: np.ndarray,
     Two 45° angles from XOR bisection create closure at 8 steps:
     8 × 45° = 360° = complete orbit = eigenstate
     """
+    # Type validation
+    if not isinstance(L, np.ndarray):
+        raise TypeError(f"L must be a numpy array, got {type(L).__name__}")
+    if not isinstance(R, np.ndarray):
+        raise TypeError(f"R must be a numpy array, got {type(R).__name__}")
+    if not isinstance(V, np.ndarray):
+        raise TypeError(f"V must be a numpy array, got {type(V).__name__}")
+
+    # Shape validation
+    if L.shape != R.shape or R.shape != V.shape:
+        raise ValueError(f"L, R, V must have the same shape. Got L:{L.shape}, R:{R.shape}, V:{V.shape}")
+
+    # Check for NaN/Inf
+    if np.any(np.isnan(L)) or np.any(np.isnan(R)) or np.any(np.isnan(V)):
+        raise ValueError("Input vectors contain NaN values")
+    if np.any(np.isinf(L)) or np.any(np.isinf(R)) or np.any(np.isinf(V)):
+        raise ValueError("Input vectors contain Inf values")
+
     M_raw = L + R + V
     norm = np.linalg.norm(M_raw)
 
     if norm < 1e-10:
         # Degenerate case: all vectors zero
-        return np.zeros_like(L)
+        raise ValueError("Cannot compute M: all input vectors are zero or nearly zero (norm < 1e-10)")
 
     M = M_raw / norm
     return M

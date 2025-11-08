@@ -3,11 +3,10 @@
 """
 Basic tests for eigen_text_core.py
 
-Tests the semantic triad functions and convergence detection
-"""
+Tests the semantic triad functions and convergence detection.
 
-import sys
-sys.path.insert(0, '/home/user/EigenAI')
+Run with: pytest tests/test_core.py -v
+"""
 
 import numpy as np
 from src.eigen_text_core import (
@@ -24,8 +23,6 @@ from src.eigen_text_core import (
 
 def test_extract_LRV():
     """Test LRV extraction from sentence"""
-    print("Testing extract_LRV_from_sentence...")
-
     text = "The wind bends the tree"
     triad = extract_LRV_from_sentence(text, embedding_dim=100)
 
@@ -35,13 +32,9 @@ def test_extract_LRV():
     assert triad.V.shape == (100,)
     assert triad.text == text
 
-    print("  ✓ Triad extraction works")
-
 
 def test_compute_M_geometric():
     """Test geometric M computation"""
-    print("Testing compute_M_geometric...")
-
     L = np.array([1.0, 0.0, 0.0])
     R = np.array([0.0, 1.0, 0.0])
     V = np.array([0.0, 0.0, 1.0])
@@ -56,13 +49,9 @@ def test_compute_M_geometric():
     expected = np.array([1.0, 1.0, 1.0]) / np.sqrt(3)
     assert np.allclose(M, expected)
 
-    print("  ✓ Geometric M computation correct (45° bisection)")
-
 
 def test_compute_M_xor():
     """Test XOR M computation"""
-    print("Testing compute_M_xor...")
-
     L = np.array([1.0, -1.0, 1.0, -1.0])
     R = np.array([1.0, 1.0, -1.0, -1.0])
     V = np.array([1.0, 1.0, 1.0, 1.0])
@@ -72,13 +61,9 @@ def test_compute_M_xor():
     assert M.shape == (4,)
     assert np.linalg.norm(M) > 0  # Non-zero result
 
-    print("  ✓ XOR M computation works")
-
 
 def test_measure_understanding_change():
     """Test change/stability metrics"""
-    print("Testing measure_understanding_change...")
-
     M1 = np.array([1.0, 0.0, 0.0])
     M2 = np.array([1.0, 0.0, 0.0])  # Identical
 
@@ -97,13 +82,9 @@ def test_measure_understanding_change():
     assert alignment2 == 0.0  # Orthogonal
     assert C2 > 0  # Some change
 
-    print("  ✓ Change/stability metrics correct")
-
 
 def test_detect_eigenstate():
     """Test eigenstate detection"""
-    print("Testing detect_eigenstate...")
-
     # Test fixed-point eigenstate
     M_stable = np.array([1.0, 0.0, 0.0])
     M_history = [M_stable, M_stable, M_stable, M_stable]
@@ -122,13 +103,9 @@ def test_detect_eigenstate():
     # For truly periodic detection, we'd need very similar vectors
     # This is a simplified test
 
-    print("  ✓ Eigenstate detection works")
-
 
 def test_analyze_regime():
     """Test regime classification"""
-    print("Testing analyze_understanding_regime...")
-
     # Time-like: S > C
     regime1 = analyze_understanding_regime(C=10, S=100)
     assert "time-like" in regime1
@@ -143,13 +120,9 @@ def test_analyze_regime():
     regime3 = analyze_understanding_regime(C=10, S=10)
     assert "light-like" in regime3
 
-    print("  ✓ Regime classification correct")
-
 
 def test_understanding_loop_convergence():
     """Test understanding loop convergence"""
-    print("Testing understanding_loop...")
-
     text = "The cat sat on the mat"
 
     M_final, M_history, metrics = understanding_loop(
@@ -164,15 +137,9 @@ def test_understanding_loop_convergence():
     assert 'eigenstate_type' in metrics
     assert metrics['iterations'] <= 20
 
-    print(f"  ✓ Understanding loop converged in {metrics['iterations']} iterations")
-    print(f"    Eigenstate type: {metrics['eigenstate_type']}")
-    print(f"    Final regime: {metrics['final_regime']}")
-
 
 def test_xor_vs_geometric():
     """Compare XOR and geometric methods"""
-    print("Testing XOR vs Geometric methods...")
-
     text = "Simple test sentence"
 
     M_geo, _, metrics_geo = understanding_loop(
@@ -183,44 +150,8 @@ def test_xor_vs_geometric():
         text, max_iterations=15, method='xor', verbose=False
     )
 
-    print(f"  Geometric: {metrics_geo['iterations']} iterations, {metrics_geo['eigenstate_type']}")
-    print(f"  XOR: {metrics_xor['iterations']} iterations, {metrics_xor['eigenstate_type']}")
-
     assert metrics_geo['converged'] or metrics_xor['converged']
 
-    print("  ✓ Both methods work")
 
-
-def run_all_tests():
-    """Run all tests"""
-    print("=" * 70)
-    print("RUNNING EIGEN TEXT CORE TESTS")
-    print("=" * 70)
-    print()
-
-    try:
-        test_extract_LRV()
-        test_compute_M_geometric()
-        test_compute_M_xor()
-        test_measure_understanding_change()
-        test_detect_eigenstate()
-        test_analyze_regime()
-        test_understanding_loop_convergence()
-        test_xor_vs_geometric()
-
-        print()
-        print("=" * 70)
-        print("ALL TESTS PASSED ✓")
-        print("=" * 70)
-
-    except AssertionError as e:
-        print()
-        print("=" * 70)
-        print(f"TEST FAILED ✗")
-        print(f"Error: {e}")
-        print("=" * 70)
-        raise
-
-
-if __name__ == "__main__":
-    run_all_tests()
+# Tests are now run with: pytest tests/test_core.py -v
+# pytest automatically discovers and runs all functions starting with test_
