@@ -20,8 +20,12 @@ Expected Results:
 """
 
 import sys
+import os
 
-sys.path.insert(0, "/home/user/EigenAI")
+# Add project root to path dynamically
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
 
 import numpy as np
 from typing import Dict, List, Tuple

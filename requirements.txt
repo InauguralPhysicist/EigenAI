@@ -1,8 +1,8 @@
 # Core dependencies for EigenAI
 
 # Numerical computing
-# NumPy 2.0+ requires Python>=3.9, so constrain to 1.x for Python 3.8 compatibility
-numpy>=1.24.0,<2.0.0
+# Python 3.9+ required (3.8 EOL as of October 2024)
+numpy>=1.24.0
 
 # NLP parsing (required for syntactic geometry and entropy weighting)
 spacy>=3.5.0
