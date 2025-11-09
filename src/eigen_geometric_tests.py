@@ -14,12 +14,12 @@ import numpy as np
 from typing import Tuple, Optional, List
 
 
-def test_rupert_property(
+def check_rupert_property(
     vertices: np.ndarray,
     n_samples: int = 1000
 ) -> Tuple[int, bool]:
     """
-    Test whether a polyhedron (defined by vertices) has the Rupert property.
+    Check whether a polyhedron (defined by vertices) has the Rupert property.
 
     The Rupert property tests if a hole can be made through a geometric shape
     such that another shape of equal or larger size can pass through it.

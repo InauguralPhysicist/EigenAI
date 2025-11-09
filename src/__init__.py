@@ -38,7 +38,7 @@ from .eigen_discrete_tokenizer import (
 
 # Geometric property tests
 from .eigen_geometric_tests import (
-    test_rupert_property,
+    check_rupert_property,
     create_unit_cube,
     create_cube,
 )
@@ -84,7 +84,7 @@ __all__ = [
     "detect_cycle_in_trajectory",
     "SPACY_AVAILABLE",
     # Geometric tests
-    "test_rupert_property",
+    "check_rupert_property",
     "create_unit_cube",
     "create_cube",
     # Domain-specific

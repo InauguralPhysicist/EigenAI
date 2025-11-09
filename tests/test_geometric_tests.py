@@ -7,7 +7,7 @@ Tests the test_rupert_property function and related geometric utilities.
 import numpy as np
 import pytest
 from src.eigen_geometric_tests import (
-    test_rupert_property,
+    check_rupert_property,
     create_unit_cube,
     create_cube,
 )
@@ -19,7 +19,7 @@ class TestRupertProperty:
     def test_basic_cube(self):
         """Test that a basic unit cube can be tested for Rupert property."""
         vertices = create_unit_cube()
-        attempts, has_passage = test_rupert_property(vertices, n_samples=100)
+        attempts, has_passage = check_rupert_property(vertices, n_samples=100)
 
         # Should have made some attempts
         assert attempts > 0
@@ -31,7 +31,7 @@ class TestRupertProperty:
     def test_custom_cube(self):
         """Test with a custom-sized cube."""
         vertices = create_cube(side_length=2.0, center=[0, 0, 0])
-        attempts, has_passage = test_rupert_property(vertices, n_samples=50)
+        attempts, has_passage = check_rupert_property(vertices, n_samples=50)
 
         assert attempts > 0
         assert attempts <= 50
@@ -40,34 +40,34 @@ class TestRupertProperty:
     def test_invalid_vertices_none(self):
         """Test that None vertices raises ValueError."""
         with pytest.raises(ValueError, match="vertices cannot be None or empty"):
-            test_rupert_property(None, n_samples=10)
+            check_rupert_property(None, n_samples=10)
 
     def test_invalid_vertices_empty(self):
         """Test that empty vertices raises ValueError."""
         with pytest.raises(ValueError, match="vertices cannot be None or empty"):
-            test_rupert_property(np.array([]), n_samples=10)
+            check_rupert_property(np.array([]), n_samples=10)
 
     def test_invalid_vertices_shape(self):
         """Test that incorrect vertex shape raises ValueError."""
         # Wrong dimensions (2D instead of 3D)
         vertices_2d = np.array([[0, 0], [1, 1]])
         with pytest.raises(ValueError, match="vertices must be shape"):
-            test_rupert_property(vertices_2d, n_samples=10)
+            check_rupert_property(vertices_2d, n_samples=10)
 
         # Wrong shape (1D array)
         vertices_1d = np.array([1, 2, 3])
         with pytest.raises(ValueError, match="vertices must be shape"):
-            test_rupert_property(vertices_1d, n_samples=10)
+            check_rupert_property(vertices_1d, n_samples=10)
 
     def test_invalid_n_samples(self):
         """Test that invalid n_samples raises ValueError."""
         vertices = create_unit_cube()
 
         with pytest.raises(ValueError, match="n_samples must be positive"):
-            test_rupert_property(vertices, n_samples=0)
+            check_rupert_property(vertices, n_samples=0)
 
         with pytest.raises(ValueError, match="n_samples must be positive"):
-            test_rupert_property(vertices, n_samples=-10)
+            check_rupert_property(vertices, n_samples=-10)
 
     def test_vertices_as_list(self):
         """Test that vertices can be provided as a list."""
@@ -81,7 +81,7 @@ class TestRupertProperty:
             [0.5, 0.5, 0.5],
             [-0.5, 0.5, 0.5],
         ]
-        attempts, has_passage = test_rupert_property(vertices_list, n_samples=50)
+        attempts, has_passage = check_rupert_property(vertices_list, n_samples=50)
 
         assert attempts > 0
         assert isinstance(has_passage, bool)
@@ -89,7 +89,7 @@ class TestRupertProperty:
     def test_large_n_samples(self):
         """Test with a larger number of samples."""
         vertices = create_unit_cube()
-        attempts, has_passage = test_rupert_property(vertices, n_samples=1000)
+        attempts, has_passage = check_rupert_property(vertices, n_samples=1000)
 
         # With more samples, we're more likely to find a passage
         assert attempts > 0
@@ -102,11 +102,11 @@ class TestRupertProperty:
 
         # First run
         np.random.seed(42)
-        attempts1, has_passage1 = test_rupert_property(vertices, n_samples=100)
+        attempts1, has_passage1 = check_rupert_property(vertices, n_samples=100)
 
         # Second run with same seed
         np.random.seed(42)
-        attempts2, has_passage2 = test_rupert_property(vertices, n_samples=100)
+        attempts2, has_passage2 = check_rupert_property(vertices, n_samples=100)
 
         # Results should be identical
         assert attempts1 == attempts2
@@ -189,7 +189,7 @@ class TestEdgeCases:
     def test_very_small_cube(self):
         """Test with a very small cube."""
         vertices = create_cube(side_length=0.001)
-        attempts, has_passage = test_rupert_property(vertices, n_samples=10)
+        attempts, has_passage = check_rupert_property(vertices, n_samples=10)
 
         assert attempts > 0
         assert isinstance(has_passage, bool)
@@ -197,7 +197,7 @@ class TestEdgeCases:
     def test_very_large_cube(self):
         """Test with a very large cube."""
         vertices = create_cube(side_length=1000.0)
-        attempts, has_passage = test_rupert_property(vertices, n_samples=10)
+        attempts, has_passage = check_rupert_property(vertices, n_samples=10)
 
         assert attempts > 0
         assert isinstance(has_passage, bool)
@@ -211,7 +211,7 @@ class TestEdgeCases:
             [0.5, np.sqrt(3)/2, 0],
             [0.5, np.sqrt(3)/6, np.sqrt(2/3)],
         ])
-        attempts, has_passage = test_rupert_property(vertices, n_samples=50)
+        attempts, has_passage = check_rupert_property(vertices, n_samples=50)
 
         assert attempts > 0
         assert isinstance(has_passage, bool)
@@ -219,7 +219,7 @@ class TestEdgeCases:
     def test_single_sample(self):
         """Test with just a single sample."""
         vertices = create_unit_cube()
-        attempts, has_passage = test_rupert_property(vertices, n_samples=1)
+        attempts, has_passage = check_rupert_property(vertices, n_samples=1)
 
         assert attempts == 1
         assert isinstance(has_passage, bool)
