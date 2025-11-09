@@ -120,8 +120,8 @@ All predictions validated experimentally.
 ### Dependencies
 
 #### Required
-- Python ≥ 3.8
-- numpy ≥ 1.24.0
+- Python ≥ 3.9 (Python 3.8 reached EOL October 2024)
+- numpy ≥ 1.24.0, < 2.0.0
 
 #### Optional (for advanced features)
 - spacy ≥ 3.0.0 (syntactic geometry, entropy weighting)
@@ -139,7 +139,8 @@ All predictions validated experimentally.
 - Typical understanding loop: 3-5 iterations (< 1ms on modern CPU)
 - Syntactic extraction: ~10ms with spacy
 - Entropy-weighted extraction: ~15ms with frequency model
-- Test suite: 62 tests in < 3 seconds
+- Geometric property testing: ~2ms per sample (Monte Carlo)
+- Test suite: 75 tests in < 3 seconds
 
 ### Platform Support
 
