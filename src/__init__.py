@@ -36,6 +36,13 @@ from .eigen_discrete_tokenizer import (
     detect_cycle_in_trajectory,
 )
 
+# Geometric property tests
+from .eigen_geometric_tests import (
+    test_rupert_property,
+    create_unit_cube,
+    create_cube,
+)
+
 # Domain-specific modules (optional imports)
 try:
     from .eigen_em_field import analyze_em_field
@@ -76,6 +83,10 @@ __all__ = [
     "tokenize_word",
     "detect_cycle_in_trajectory",
     "SPACY_AVAILABLE",
+    # Geometric tests
+    "test_rupert_property",
+    "create_unit_cube",
+    "create_cube",
     # Domain-specific
     "analyze_em_field",
     "geodesic_trajectory",
