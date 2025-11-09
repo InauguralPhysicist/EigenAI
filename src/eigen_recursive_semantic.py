@@ -23,17 +23,20 @@ from typing import List, Dict, Tuple, Optional
 from dataclasses import dataclass
 from collections import deque
 import sys
+import os
 
-sys.path.insert(0, "/home/user/EigenAI/src")
-sys.path.insert(0, "/home/user/EigenAI")
+# Add project root to path dynamically (only if not installed)
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
 
-from eigen_semantic_transformer import (
+from src.eigen_semantic_transformer import (
     SemanticGeometricTransformer,
     SemanticState,
     compute_grammatical_score,
     compute_ds2_semantic,
 )
-from eigen_semantic_eigenstate import (
+from src.eigen_semantic_eigenstate import (
     process_text_with_eigenstates,
     quantize_semantic_state,
     detect_eigenstate_quantized,
