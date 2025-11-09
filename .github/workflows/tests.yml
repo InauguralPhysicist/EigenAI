@@ -13,9 +13,9 @@ jobs:
     runs-on: ubuntu-latest
 
     strategy:
-      # Test on multiple Python versions
+      # Test on multiple Python versions (3.8 EOL as of October 2024)
       matrix:
-        python-version: ["3.8", "3.9", "3.10", "3.11"]
+        python-version: ["3.9", "3.10", "3.11"]
 
     steps:
     # Step 1: Check out the code
