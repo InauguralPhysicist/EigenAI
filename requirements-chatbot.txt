@@ -1,0 +1,16 @@
+# EigenAI Chatbot Requirements
+# Install with: pip install -r requirements-chatbot.txt
+
+# Base EigenAI requirements
+numpy>=1.24.0
+spacy>=3.5.0
+
+# Streamlit for web interface
+streamlit>=1.28.0
+
+# PostgreSQL database support
+psycopg2-binary>=2.9.9
+
+# Optional: For enhanced visualizations
+matplotlib>=3.7.0
+plotly>=5.17.0
