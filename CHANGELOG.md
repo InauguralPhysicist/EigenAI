@@ -38,12 +38,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Domain adaptations**: EM fields, gravity/inertia, quantum position-momentum
 - **Lorentz boosts**: Time dilation and velocity composition for understanding
 
+#### Geometric Property Testing
+- **Prince Rupert's Cube** property testing via `check_rupert_property()`
+  - Monte Carlo sampling approach with random rotations
+  - Tests if polyhedra have passages for equal/larger shapes
+  - Helper functions: `create_unit_cube()`, `create_cube()`
+- **20 geometric property tests** validating functionality and edge cases
+
 #### Testing & Validation
-- **62 comprehensive tests** (100% passing)
+- **75 comprehensive tests** (100% passing, 8 skipped)
 - **Falsification test suite** (20 tests attempting to break the theory)
 - **Information curvature tests** (8 tests validating entropy hypothesis)
+- **Geometric property tests** (20 tests for Rupert property)
 - **Integration tests** across all domains
 - **Edge case coverage**: Unicode, special characters, empty strings, etc.
+- **CI/CD enhancements**: JUnit XML artifacts, environment diagnostics, enhanced logging
+
+#### Infrastructure & CI/CD
+- **Python 3.9+ requirement** (Python 3.8 EOL as of October 2024)
+- **Enhanced CI logging**: `-ra --maxfail=1` flags for better error reporting
+- **Test artifacts**: JUnit XML reports for offline analysis
+- **Environment diagnostics**: Test banner showing Python/numpy/spacy versions
+- **Multi-version testing**: Python 3.9, 3.10, 3.11
 
 #### Documentation
 - Comprehensive README with quick start and examples
@@ -104,8 +120,8 @@ All predictions validated experimentally.
 ### Dependencies
 
 #### Required
-- Python ≥ 3.8
-- numpy ≥ 1.24.0
+- Python ≥ 3.9 (Python 3.8 reached EOL October 2024)
+- numpy ≥ 1.24.0, < 2.0.0
 
 #### Optional (for advanced features)
 - spacy ≥ 3.0.0 (syntactic geometry, entropy weighting)
@@ -123,7 +139,8 @@ All predictions validated experimentally.
 - Typical understanding loop: 3-5 iterations (< 1ms on modern CPU)
 - Syntactic extraction: ~10ms with spacy
 - Entropy-weighted extraction: ~15ms with frequency model
-- Test suite: 62 tests in < 3 seconds
+- Geometric property testing: ~2ms per sample (Monte Carlo)
+- Test suite: 75 tests in < 3 seconds
 
 ### Platform Support
 
