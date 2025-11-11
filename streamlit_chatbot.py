@@ -17,12 +17,56 @@ if current_dir not in sys.path:
     sys.path.insert(0, current_dir)
 
 from src.eigen_recursive_ai import RecursiveEigenAI
-from src.eigen_discrete_tokenizer import tokenize_word
+from src.eigen_discrete_tokenizer import tokenize_word, xor_states, compute_change_stability
 
 def tokenize_text(text):
     """Tokenize a text string into discrete tokens"""
     words = text.split()
     return [tokenize_word(word) for word in words]
+
+def tokenize_and_record_transitions(text, learned_tokens):
+    """
+    Tokenize text and record transition statistics for each token
+
+    Parameters
+    ----------
+    text : str
+        Input text
+    learned_tokens : dict
+        Dictionary of learned tokens (will be updated in-place)
+
+    Returns
+    -------
+    tokens : list of DiscreteToken
+        Tokens with updated transition statistics
+    """
+    words = text.split()
+    tokens = []
+
+    # Initialize state for XOR cascade
+    state = (0, 0, 0, 0)
+
+    for word in words:
+        # Get or create token
+        word_key = word.lower()
+        if word_key in learned_tokens:
+            token = learned_tokens[word_key]
+        else:
+            token = tokenize_word(word)
+
+        # Compute transition caused by this token
+        prev_state = state
+        state = xor_states(state, token.as_tuple())
+        C, S, ds2 = compute_change_stability(prev_state, state)
+
+        # Record transition statistics
+        token.record_transition(ds2)
+
+        # Update learned tokens
+        learned_tokens[word_key] = token
+        tokens.append(token)
+
+    return tokens
 
 st.set_page_config(
     page_title="EigenAI Chatbot",
@@ -54,25 +98,84 @@ if "ai" not in st.session_state:
 
 def generate_token_response(learned_tokens, user_message, max_words=10):
     """
-    Attempt to generate a response using only learned discrete tokens
-    This shows if the AI can 'speak' using the token vocabulary it has learned
+    Generate response using geometric classification of tokens
+
+    Uses transition statistics to separate:
+    - Time-like tokens (S > C): structural/sequential words
+    - Space-like tokens (C > S): semantic/content words
+    - Light-like tokens (C = S): relational/transformational words
     """
     if len(learned_tokens) < 3:
         return "⋯ (Not enough tokens learned yet to generate response)"
 
-    # Simple generation: pick relevant tokens based on similarity
-    import random
-    available_words = list(learned_tokens.keys())
+    # Classify tokens by their geometric properties
+    time_like_tokens = []  # Structural: the, to, is, of, etc.
+    space_like_tokens = []  # Semantic: cat, quantum, oscillation, etc.
+    light_like_tokens = []  # Relational: is, becomes, connects, etc.
+    unknown_tokens = []  # Not enough data yet
 
-    # Prefer tokens with similar bit patterns to user's message tokens
+    for word, token in learned_tokens.items():
+        classification = token.get_classification()
+        if classification == 'time-like':
+            time_like_tokens.append((word, token))
+        elif classification == 'space-like':
+            space_like_tokens.append((word, token))
+        elif classification == 'light-like':
+            light_like_tokens.append((word, token))
+        else:
+            unknown_tokens.append((word, token))
+
+    # Tokenize user input to extract semantic intent
     user_tokens = tokenize_text(user_message.lower())
+    if not user_tokens:
+        return "⋯"
 
-    # Pick words that have similar L, R, or V values (simplified similarity)
+    # Compute average semantic pattern from user input
+    avg_L = sum(t.L for t in user_tokens) / len(user_tokens)
+    avg_R = sum(t.R for t in user_tokens) / len(user_tokens)
+    avg_V = sum(t.V for t in user_tokens) / len(user_tokens)
+    avg_M = sum(t.M for t in user_tokens) / len(user_tokens)
+
+    # Score space-like tokens by semantic relevance
+    def semantic_similarity(token):
+        l_sim = 1.0 / (1.0 + abs(token.L - avg_L) / 255.0)
+        r_sim = 1.0 / (1.0 + abs(token.R - avg_R) / 255.0)
+        v_sim = 1.0 / (1.0 + abs(token.V - avg_V) / 255.0)
+        m_sim = 1.0 / (1.0 + abs(token.M - avg_M) / 255.0)
+        return (l_sim + r_sim + v_sim + 2.0 * m_sim) / 5.0
+
+    # Sort space-like tokens by relevance
+    space_like_tokens.sort(key=lambda x: semantic_similarity(x[1]), reverse=True)
+
+    # Build response with geometric structure
     response_words = []
-    for _ in range(min(max_words, len(available_words))):
-        if available_words:
-            word = random.choice(available_words)
+
+    # Target distribution based on natural language
+    num_structural = max(1, max_words // 4)  # ~25% structural
+    num_content = max(1, max_words // 2)     # ~50% content
+    num_relational = max(1, max_words // 4)  # ~25% relational
+
+    # Add time-like tokens (structural/sequential)
+    for i, (word, token) in enumerate(time_like_tokens[:num_structural]):
+        response_words.append(word)
+
+    # Add space-like tokens (semantic content) - prioritize high similarity
+    for i, (word, token) in enumerate(space_like_tokens[:num_content]):
+        response_words.append(word)
+
+    # Add light-like tokens (relational/transformational)
+    for i, (word, token) in enumerate(light_like_tokens[:num_relational]):
+        response_words.append(word)
+
+    # Fill remaining with unknowns if needed
+    remaining = max_words - len(response_words)
+    if remaining > 0 and unknown_tokens:
+        unknown_tokens.sort(key=lambda x: semantic_similarity(x[1]), reverse=True)
+        for i, (word, token) in enumerate(unknown_tokens[:remaining]):
             response_words.append(word)
+
+    if not response_words:
+        return "⋯"
 
     return " ".join(response_words)
 
@@ -98,9 +201,16 @@ with col1:
                     # Show discrete tokens if available
                     if "tokens" in m:
                         st.divider()
-                        st.caption("🔢 Discrete Token Bit Patterns")
+                        st.caption("🔢 Discrete Token Bit Patterns & Classification")
                         for token in m["tokens"][:5]:  # Show first 5 tokens
+                            classification = token.get_classification()
+                            ratios = token.get_classification_ratios()
+
+                            # Icon for classification
+                            icon = "⏱️" if classification == "time-like" else "🌐" if classification == "space-like" else "💫" if classification == "light-like" else "❓"
+
                             st.code(f"{token.word:>12} → L:{token.L:08b} R:{token.R:08b} V:{token.V:08b} M:{token.M:08b}", language="text")
+                            st.caption(f"{icon} {classification} | Usage: {token.usage_count} | T:{ratios['time-like']:.2f} S:{ratios['space-like']:.2f} L:{ratios['light-like']:.2f}")
 
                     if m.get("entropy_weighted"):
                         st.caption("✨ Processed with entropy weighting (v1.0.0)")
@@ -118,12 +228,8 @@ with col1:
             st.markdown(prompt)
 
         with st.spinner("Processing and detecting eigenstates..."):
-            # Tokenize the input to show discrete representation
-            tokens = tokenize_text(prompt)
-
-            # Learn tokens from user input
-            for token in tokens:
-                st.session_state.learned_tokens[token.word.lower()] = token
+            # Tokenize user input and record transition statistics
+            tokens = tokenize_and_record_transitions(prompt, st.session_state.learned_tokens)
 
             # Process user input through EigenAI framework
             result = st.session_state.ai.process(prompt, verbose=False)
@@ -134,10 +240,11 @@ with col1:
                 prompt
             )
 
-            # Learn tokens from the generated response
-            response_tokens = tokenize_text(token_generated)
-            for token in response_tokens:
-                st.session_state.learned_tokens[token.word.lower()] = token
+            # Learn tokens from generated response and record transitions
+            response_tokens = tokenize_and_record_transitions(
+                token_generated,
+                st.session_state.learned_tokens
+            )
 
             # Feed the generated response back into itself for recursive understanding
             st.session_state.ai.process(token_generated, verbose=False)
@@ -227,7 +334,18 @@ with col2:
     st.divider()
 
     if st.session_state.learned_tokens:
-        st.caption(f"📚 Learned Vocabulary: {len(st.session_state.learned_tokens)} tokens")
+        # Count tokens by classification
+        time_like = sum(1 for t in st.session_state.learned_tokens.values() if t.get_classification() == 'time-like')
+        space_like = sum(1 for t in st.session_state.learned_tokens.values() if t.get_classification() == 'space-like')
+        light_like = sum(1 for t in st.session_state.learned_tokens.values() if t.get_classification() == 'light-like')
+        unknown = sum(1 for t in st.session_state.learned_tokens.values() if t.get_classification() == 'unknown')
+
+        st.caption(f"📚 **Vocabulary: {len(st.session_state.learned_tokens)} tokens**")
+        st.caption(f"⏱️ Time-like (structural): {time_like}")
+        st.caption(f"🌐 Space-like (semantic): {space_like}")
+        st.caption(f"💫 Light-like (relational): {light_like}")
+        if unknown > 0:
+            st.caption(f"❓ Unknown (learning): {unknown}")
 
 st.sidebar.title("About EigenAI v1.0.0")
 st.sidebar.markdown("""
@@ -248,6 +366,12 @@ This chatbot demonstrates **recursive self-modifying AI** that measures understa
 - Fixed-point: Converged
 - Periodic: Oscillating pattern
 - None: Still learning
+
+**Geometric Token Classification**:
+From transition metric ds² = S² - C²:
+- ⏱️ **Time-like** (S > C): Structural/sequential words (the, to, is)
+- 🌐 **Space-like** (C > S): Semantic/content words (quantum, cat)
+- 💫 **Light-like** (C = S): Relational/transformational words (becomes, connects)
 
 **Recursive Self-Modification**:
 The AI changes its own processing framework based on what it learns, building genuine comprehension over time.
