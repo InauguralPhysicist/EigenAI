@@ -16,6 +16,7 @@ import numpy as np
 from typing import List, Tuple, Dict, Optional
 from dataclasses import dataclass
 import hashlib
+import time
 
 # Constants for discrete geometry
 BYTE_MAX = 256  # Maximum value for a single byte (0-255)
@@ -59,6 +60,16 @@ class DiscreteToken:
         NEW transitions this session (for atomic DB increment)
     usage_delta : int
         NEW usages this session (for atomic DB increment)
+
+    Physics-inspired metrics (runtime-computed, not persisted):
+    momentum : float
+        Magnitude in 4D eigenspace: √(L² + R² + V² + M²)
+    velocity : float
+        Usage rate (tokens per unit time)
+    phase : float
+        Geometric phase angle in [0, 2π) from (L,R,V,M) → cylindrical coords
+    information_density : float
+        Shannon entropy of bit pattern (0-1)
     """
 
     L: int
@@ -75,6 +86,9 @@ class DiscreteToken:
     space_like_delta: int = 0
     light_like_delta: int = 0
     usage_delta: int = 0
+    # Physics-inspired metrics (computed on-demand)
+    first_seen: float = 0.0  # Unix timestamp
+    last_used: float = 0.0   # Unix timestamp
 
     def __repr__(self):
         return f"Token({self.word}: L={self.L:08b} R={self.R:08b} V={self.V:08b} M={self.M:08b})"
@@ -88,6 +102,7 @@ class DiscreteToken:
         Record a transition caused by this token
 
         Increments both total counts (for classification) and deltas (for DB sync)
+        Updates last_used timestamp for velocity tracking
 
         Parameters
         ----------
@@ -96,6 +111,7 @@ class DiscreteToken:
         """
         self.usage_count += 1
         self.usage_delta += 1
+        self.last_used = time.time()  # Update velocity timestamp
 
         if ds2 > 0:
             self.time_like_count += 1
@@ -144,6 +160,108 @@ class DiscreteToken:
             'time-like': self.time_like_count / self.usage_count,
             'space-like': self.space_like_count / self.usage_count,
             'light-like': self.light_like_count / self.usage_count
+        }
+
+    def get_momentum(self) -> float:
+        """
+        Compute 4D momentum magnitude: p = √(L² + R² + V² + M²)
+
+        Interpretation: Position magnitude in eigenspace.
+        Higher momentum → token occupies higher-energy region of state space.
+
+        Returns
+        -------
+        momentum : float
+            Euclidean norm in [0, 510] (max when all components = 255)
+        """
+        return np.sqrt(self.L**2 + self.R**2 + self.V**2 + self.M**2)
+
+    def get_velocity(self) -> float:
+        """
+        Compute usage velocity: v = usage_count / Δt
+
+        Requires first_seen and last_used timestamps.
+        If timestamps not set, returns usage_count (discrete velocity).
+
+        Returns
+        -------
+        velocity : float
+            Tokens per second (or total usage if no time data)
+        """
+        if self.first_seen > 0 and self.last_used > self.first_seen:
+            delta_t = self.last_used - self.first_seen
+            return self.usage_count / delta_t
+        return float(self.usage_count)
+
+    def get_phase(self) -> float:
+        """
+        Compute geometric phase angle from (L, R, V, M) bit pattern
+
+        Uses cylindrical coordinates: ϕ = arctan2(R, L)
+        Phase represents position on the relational oscillator.
+
+        Returns
+        -------
+        phase : float
+            Phase angle in [0, 2π) radians
+        """
+        return np.arctan2(float(self.R), float(self.L)) % (2 * np.pi)
+
+    def get_information_density(self) -> float:
+        """
+        Compute Shannon entropy of bit pattern (normalized)
+
+        H = -Σ p_i log₂(p_i) where p_i = bit frequency
+
+        Returns
+        -------
+        entropy : float
+            Normalized entropy in [0, 1]
+            0 = all bits same (00000000 or 11111111)
+            1 = maximum entropy (equal 0s and 1s)
+        """
+        # Combine all 4 bytes into 32-bit pattern
+        bits = []
+        for byte_val in [self.L, self.R, self.V, self.M]:
+            bits.extend([int(b) for b in format(byte_val, '08b')])
+
+        # Count 0s and 1s
+        ones = sum(bits)
+        zeros = 32 - ones
+
+        if ones == 0 or zeros == 0:
+            return 0.0  # No entropy (all same)
+
+        # Shannon entropy
+        p1 = ones / 32.0
+        p0 = zeros / 32.0
+        H = -(p1 * np.log2(p1) + p0 * np.log2(p0))
+
+        return H  # Already normalized to [0, 1] for binary
+
+    def get_physics_metrics(self) -> dict:
+        """
+        Get all physics-inspired metrics
+
+        Returns
+        -------
+        metrics : dict
+            {
+                'momentum': float,
+                'velocity': float,
+                'phase': float,
+                'information_density': float,
+                'classification': str,
+                'usage_count': int
+            }
+        """
+        return {
+            'momentum': self.get_momentum(),
+            'velocity': self.get_velocity(),
+            'phase': self.get_phase(),
+            'information_density': self.get_information_density(),
+            'classification': self.get_classification(),
+            'usage_count': self.usage_count
         }
 
 
@@ -204,7 +322,13 @@ def tokenize_word(word: str) -> DiscreteToken:
     V = hash_to_byte(word_lower, seed=3)
     M = L ^ R ^ V  # XOR parity
 
-    return DiscreteToken(L=L, R=R, V=V, M=M, word=word)
+    # Set creation timestamp for velocity tracking
+    now = time.time()
+    return DiscreteToken(
+        L=L, R=R, V=V, M=M, word=word,
+        first_seen=now,
+        last_used=now
+    )
 
 
 def xor_states(
