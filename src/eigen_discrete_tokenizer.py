@@ -29,7 +29,7 @@ MAX_PERIOD = 8  # Maximum period to check for cycles (matches PHASE_SECTORS)
 @dataclass
 class DiscreteToken:
     """
-    Discrete token as (L,R,V,M) bit pattern
+    Discrete token as (L,R,V,M) bit pattern with transition statistics
 
     Attributes
     ----------
@@ -43,6 +43,14 @@ class DiscreteToken:
         Meta byte (M = L ⊕ R ⊕ V)
     word : str
         Original word
+    time_like_count : int
+        Number of time-like transitions (S > C, stable/sequential)
+    space_like_count : int
+        Number of space-like transitions (C > S, semantic/content)
+    light_like_count : int
+        Number of light-like transitions (C = S, relational/transform)
+    usage_count : int
+        Total usage count
     """
 
     L: int
@@ -50,6 +58,10 @@ class DiscreteToken:
     V: int
     M: int
     word: str
+    time_like_count: int = 0
+    space_like_count: int = 0
+    light_like_count: int = 0
+    usage_count: int = 0
 
     def __repr__(self):
         return f"Token({self.word}: L={self.L:08b} R={self.R:08b} V={self.V:08b} M={self.M:08b})"
@@ -57,6 +69,62 @@ class DiscreteToken:
     def as_tuple(self):
         """Return as (L,R,V,M) tuple"""
         return (self.L, self.R, self.V, self.M)
+
+    def record_transition(self, ds2: int):
+        """
+        Record a transition caused by this token
+
+        Parameters
+        ----------
+        ds2 : int
+            Metric signature (S² - C²) of the transition
+        """
+        self.usage_count += 1
+        if ds2 > 0:
+            self.time_like_count += 1
+        elif ds2 < 0:
+            self.space_like_count += 1
+        else:
+            self.light_like_count += 1
+
+    def get_classification(self) -> str:
+        """
+        Get predominant geometric classification
+
+        Returns
+        -------
+        classification : str
+            'time-like', 'space-like', 'light-like', or 'unknown'
+        """
+        if self.usage_count == 0:
+            return 'unknown'
+
+        max_count = max(self.time_like_count, self.space_like_count, self.light_like_count)
+
+        if max_count == self.time_like_count:
+            return 'time-like'
+        elif max_count == self.space_like_count:
+            return 'space-like'
+        else:
+            return 'light-like'
+
+    def get_classification_ratios(self) -> dict:
+        """
+        Get ratios of each transition type
+
+        Returns
+        -------
+        ratios : dict
+            {'time-like': float, 'space-like': float, 'light-like': float}
+        """
+        if self.usage_count == 0:
+            return {'time-like': 0.0, 'space-like': 0.0, 'light-like': 0.0}
+
+        return {
+            'time-like': self.time_like_count / self.usage_count,
+            'space-like': self.space_like_count / self.usage_count,
+            'light-like': self.light_like_count / self.usage_count
+        }
 
 
 def hash_to_byte(text: str, seed: int = 0) -> int:
