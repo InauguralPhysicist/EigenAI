@@ -529,23 +529,11 @@ with col2:
     st.divider()
     
     if st.button("🔄 Clear Conversation", use_container_width=True):
-        # Clear current conversation (tokens persist automatically)
+        # Clear current conversation (global tokens persist for community building)
         st.session_state.messages = []
         st.session_state.metrics_history = []
         st.rerun()
-    
-    if st.button("🗑️ Full Reset (New Vocabulary)", use_container_width=True):
-        # Start completely fresh - new session ID
-        new_session_id = str(uuid.uuid4())
-        cookies["session_id"] = new_session_id
-        cookies.save()
-        st.session_state.session_id = new_session_id
-        st.session_state.ai = RecursiveEigenAI(embedding_dim=64)
-        st.session_state.messages = []
-        st.session_state.metrics_history = []
-        st.session_state.learned_tokens = {}
-        st.rerun()
-    
+
     st.divider()
     
     # Show vocabulary stats with classification breakdown
