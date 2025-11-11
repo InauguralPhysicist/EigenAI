@@ -20,7 +20,6 @@ from db_helpers import (
     save_message, load_messages,
     save_learned_token, load_learned_tokens,
     save_learned_tokens_batch, load_tokens_by_classification,
-    save_ai_state, load_ai_state,
     get_session_stats
 )
 
@@ -158,18 +157,19 @@ if "session_id" not in cookies:
 if "session_id" not in st.session_state:
     st.session_state.session_id = cookies["session_id"]
 
-# Initialize AI and load from database
+# Initialize AI and load token vocabulary from database
 if "ai" not in st.session_state:
     st.session_state.ai = RecursiveEigenAI(embedding_dim=64)
     st.session_state.messages = []  # Always start with fresh conversation
     st.session_state.metrics_history = []
     st.session_state.learned_tokens = {}
-    
-    # Load ONLY the learned tokens (not conversation history)
+
+    # Load global token vocabulary (community-built)
+    # AI state NOT persisted - fresh processing framework each session avoids
+    # race conditions in global mode where concurrent users would overwrite
+    # each other's extraction rules and context embeddings
     try:
         st.session_state.learned_tokens = load_learned_tokens(st.session_state.session_id)
-        # Only load AI state, skip messages
-        load_ai_state(st.session_state.session_id, st.session_state.ai)
     except Exception as e:
         st.sidebar.warning(f"Could not load token vocabulary: {e}")
 
@@ -419,10 +419,10 @@ with col1:
             })
             st.session_state.metrics_history.append(metrics)
             
-            # Save assistant message and AI state to database
+            # Save assistant message to database (tokens already saved in batch above)
+            # AI state NOT persisted for global mode - see initialization for rationale
             try:
                 save_message(st.session_state.session_id, "assistant", full_response, metrics)
-                save_ai_state(st.session_state.session_id, st.session_state.ai)
             except Exception as e:
                 st.sidebar.error(f"DB save error: {e}")
         
