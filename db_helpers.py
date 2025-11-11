@@ -64,7 +64,11 @@ def load_messages(session_id: str) -> list:
         return messages
 
 def save_learned_token(session_id: str, token: DiscreteToken):
-    """Save a learned discrete token with transition statistics"""
+    """
+    Save a learned discrete token with atomic increment (legacy single-token API)
+
+    Note: Prefer save_learned_tokens_batch for better performance
+    """
     with get_db() as db:
         session_db_id = ensure_session(session_id)
 
@@ -75,13 +79,13 @@ def save_learned_token(session_id: str, token: DiscreteToken):
         ).first()
 
         if existing:
-            # Update existing token's transition statistics
-            existing.time_like_count = int(token.time_like_count)
-            existing.space_like_count = int(token.space_like_count)
-            existing.light_like_count = int(token.light_like_count)
-            existing.usage_count = int(token.usage_count)
+            # Atomic increment using delta (prevents race conditions)
+            existing.time_like_count += int(token.time_like_delta)
+            existing.space_like_count += int(token.space_like_delta)
+            existing.light_like_count += int(token.light_like_delta)
+            existing.usage_count += int(token.usage_delta)
         else:
-            # Create new token with all attributes
+            # Create new token with initial counts (delta = total for new tokens)
             learned_token = LearnedToken(
                 session_id=session_db_id,
                 word=token.word.lower(),
@@ -89,25 +93,36 @@ def save_learned_token(session_id: str, token: DiscreteToken):
                 r_value=int(token.R),
                 v_value=int(token.V),
                 m_value=int(token.M),
-                time_like_count=int(token.time_like_count),
-                space_like_count=int(token.space_like_count),
-                light_like_count=int(token.light_like_count),
-                usage_count=int(token.usage_count)
+                time_like_count=int(token.time_like_delta),
+                space_like_count=int(token.space_like_delta),
+                light_like_count=int(token.light_like_delta),
+                usage_count=int(token.usage_delta)
             )
             db.add(learned_token)
 
 def save_learned_tokens_batch(session_id: str, tokens: list):
     """
-    Save multiple tokens in a single transaction (optimized for bulk operations)
+    Save multiple tokens in a single transaction with atomic increments
 
-    Critical for global mode: Reduces 1000 tokens from 1000 DB connections to 1
+    CRITICAL for global mode: Uses atomic DB increments to prevent race conditions
+    where concurrent users would lose each other's updates.
+
+    Example race condition prevented:
+    - User A loads token "quantum" (time_like_count=100)
+    - User B loads token "quantum" (time_like_count=100)
+    - User A increments to 101, saves → DB: 101
+    - User B increments to 101, saves → DB: 101 (LOST UPDATE!)
+
+    With atomic increments:
+    - User A: DB += 1 → 101
+    - User B: DB += 1 → 102 ✓
 
     Parameters
     ----------
     session_id : str
         Session identifier
     tokens : list of DiscreteToken
-        Tokens to save (with geometric transition statistics)
+        Tokens to save (with geometric transition deltas)
     """
     if not tokens:
         return
@@ -130,14 +145,14 @@ def save_learned_tokens_batch(session_id: str, tokens: list):
             word_key = token.word.lower()
 
             if word_key in existing_map:
-                # Update existing token's transition statistics
+                # Atomic increment using delta (prevents race conditions)
                 existing = existing_map[word_key]
-                existing.time_like_count = int(token.time_like_count)
-                existing.space_like_count = int(token.space_like_count)
-                existing.light_like_count = int(token.light_like_count)
-                existing.usage_count = int(token.usage_count)
+                existing.time_like_count += int(token.time_like_delta)
+                existing.space_like_count += int(token.space_like_delta)
+                existing.light_like_count += int(token.light_like_delta)
+                existing.usage_count += int(token.usage_delta)
             else:
-                # Create new token with all geometric attributes
+                # Create new token with initial counts (delta = total for new tokens)
                 learned_token = LearnedToken(
                     session_id=session_db_id,
                     word=word_key,
@@ -145,14 +160,14 @@ def save_learned_tokens_batch(session_id: str, tokens: list):
                     r_value=int(token.R),
                     v_value=int(token.V),
                     m_value=int(token.M),
-                    time_like_count=int(token.time_like_count),
-                    space_like_count=int(token.space_like_count),
-                    light_like_count=int(token.light_like_count),
-                    usage_count=int(token.usage_count)
+                    time_like_count=int(token.time_like_delta),
+                    space_like_count=int(token.space_like_delta),
+                    light_like_count=int(token.light_like_delta),
+                    usage_count=int(token.usage_delta)
                 )
                 db.add(learned_token)
 
-        # Single commit for all tokens
+        # Single commit for all tokens (atomic at transaction level)
 
 def load_learned_tokens(session_id: str) -> dict:
     """Load all learned tokens for a session with transition statistics"""

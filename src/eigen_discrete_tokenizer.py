@@ -51,6 +51,14 @@ class DiscreteToken:
         Number of light-like transitions (C = S, relational/transform)
     usage_count : int
         Total usage count
+    time_like_delta : int
+        NEW transitions this session (for atomic DB increment)
+    space_like_delta : int
+        NEW transitions this session (for atomic DB increment)
+    light_like_delta : int
+        NEW transitions this session (for atomic DB increment)
+    usage_delta : int
+        NEW usages this session (for atomic DB increment)
     """
 
     L: int
@@ -62,6 +70,11 @@ class DiscreteToken:
     space_like_count: int = 0
     light_like_count: int = 0
     usage_count: int = 0
+    # Deltas track NEW transitions since load (for atomic DB updates)
+    time_like_delta: int = 0
+    space_like_delta: int = 0
+    light_like_delta: int = 0
+    usage_delta: int = 0
 
     def __repr__(self):
         return f"Token({self.word}: L={self.L:08b} R={self.R:08b} V={self.V:08b} M={self.M:08b})"
@@ -74,18 +87,25 @@ class DiscreteToken:
         """
         Record a transition caused by this token
 
+        Increments both total counts (for classification) and deltas (for DB sync)
+
         Parameters
         ----------
         ds2 : int
             Metric signature (S² - C²) of the transition
         """
         self.usage_count += 1
+        self.usage_delta += 1
+
         if ds2 > 0:
             self.time_like_count += 1
+            self.time_like_delta += 1
         elif ds2 < 0:
             self.space_like_count += 1
+            self.space_like_delta += 1
         else:
             self.light_like_count += 1
+            self.light_like_delta += 1
 
     def get_classification(self) -> str:
         """
