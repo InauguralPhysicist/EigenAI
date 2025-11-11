@@ -10,7 +10,7 @@ Stores:
 import os
 import json
 from datetime import datetime
-from sqlalchemy import create_engine, Column, Integer, String, Text, DateTime, Float, Boolean, ForeignKey
+from sqlalchemy import create_engine, Column, Integer, String, Text, DateTime, Float, Boolean, ForeignKey, Index
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 from contextlib import contextmanager
@@ -72,6 +72,18 @@ class LearnedToken(Base):
 
     session = relationship("Session", back_populates="tokens")
 
+    # Indices for efficient classification queries (CRITICAL for global mode at scale)
+    __table_args__ = (
+        # Composite index for time-like token queries
+        Index('idx_time_like', 'session_id', 'time_like_count', 'space_like_count', 'light_like_count', 'usage_count'),
+        # Composite index for space-like token queries
+        Index('idx_space_like', 'session_id', 'space_like_count', 'time_like_count', 'light_like_count', 'usage_count'),
+        # Composite index for light-like token queries
+        Index('idx_light_like', 'session_id', 'light_like_count', 'time_like_count', 'space_like_count', 'usage_count'),
+        # Index for session+word lookups (checking if token exists)
+        Index('idx_session_word', 'session_id', 'word'),
+    )
+
 class AIState(Base):
     """Recursive AI state (framework parameters)"""
     __tablename__ = 'ai_states'
@@ -106,11 +118,18 @@ def get_database_url():
     return os.environ.get('DATABASE_URL')
 
 def create_db_engine():
-    """Create SQLAlchemy engine with SSL support"""
+    """
+    Create SQLAlchemy engine with SSL and optimized connection pooling
+
+    Pool settings optimized for community-scale global mode:
+    - Handles concurrent users efficiently
+    - Prevents connection exhaustion
+    - Recycles stale connections
+    """
     url = get_database_url()
     if not url:
         raise ValueError("DATABASE_URL not found in environment variables")
-    
+
     # Configure connection args for PostgreSQL with SSL
     connect_args = {}
     if 'postgresql' in url or 'postgres' in url:
@@ -118,13 +137,18 @@ def create_db_engine():
             'sslmode': 'require',
             'connect_timeout': 10
         }
-    
+
     return create_engine(
-        url, 
+        url,
         echo=False,
         connect_args=connect_args,
-        pool_pre_ping=True,  # Verify connections before using
-        pool_recycle=3600    # Recycle connections after 1 hour
+        # Connection pool settings for multi-user deployment
+        pool_size=20,           # Base connections (up from default 5)
+        max_overflow=40,        # Additional connections under load (up from 10)
+        pool_timeout=30,        # Wait time for connection (default 30)
+        pool_pre_ping=True,     # Verify connections before using
+        pool_recycle=3600,      # Recycle connections after 1 hour
+        pool_use_lifo=True      # LIFO reuses recent connections (better for pooling)
     )
 
 # Create session maker
