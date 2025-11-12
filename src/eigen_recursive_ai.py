@@ -69,7 +69,7 @@ class RecursiveEigenAI:
     >>> ai.process("What is Fluffy?")  # Now knows Fluffy is a mammal!
     """
 
-    def __init__(self, embedding_dim: int = 128):
+    def __init__(self, embedding_dim: int = 128, context_accumulator=None):
         """
         Initialize recursive AI
 
@@ -77,8 +77,13 @@ class RecursiveEigenAI:
         ----------
         embedding_dim : int
             Dimension of understanding space
+        context_accumulator : ContextAccumulator, optional
+            If provided, modulates self-modification rate based on
+            relative information impact. Novel inputs → faster adaptation.
+            Familiar inputs → stable processing.
         """
         self.embedding_dim = embedding_dim
+        self.context_accumulator = context_accumulator
 
         # Core state
         self.M_context = np.zeros(embedding_dim)  # Initially no understanding
@@ -91,12 +96,14 @@ class RecursiveEigenAI:
             "context_influence": 0.5,  # How much M_context affects extraction
             "learning_rate": 0.3,  # How fast to update M_context
             "self_modification_rate": 0.1,  # How fast to modify own rules
+            "base_self_modification_rate": 0.1,  # Base rate before impact modulation
         }
 
         # History
         self.M_history = [self.M_context.copy()]
         self.extraction_history = [self.extraction_rules.copy()]
         self.input_history = []
+        self.impact_history = []  # Track relative impact over time
 
         # Meta-state
         self.eigenstate_reached = False
@@ -222,7 +229,8 @@ class RecursiveEigenAI:
         return M_new
 
     def self_modify_rules(
-        self, L: np.ndarray, R: np.ndarray, V: np.ndarray, M_context: np.ndarray
+        self, L: np.ndarray, R: np.ndarray, V: np.ndarray, M_context: np.ndarray,
+        relative_impact: float = 1.0
     ):
         """
         AI MODIFIES ITS OWN EXTRACTION RULES
@@ -236,14 +244,25 @@ class RecursiveEigenAI:
         - Not just parameter tuning
         - But changing HOW it processes
 
+        With Context Accumulation:
+        - High relative impact → faster self-modification (novel paradigm)
+        - Low relative impact → slower self-modification (stable understanding)
+
         Parameters
         ----------
         L, R, V : np.ndarray
             Current extraction
         M_context : np.ndarray
             Current understanding
+        relative_impact : float
+            Relative information impact (modulates modification rate)
         """
-        modification_rate = self.extraction_rules["self_modification_rate"]
+        # Modulate self-modification rate by relative impact
+        # High impact (novel) → adapt faster
+        # Low impact (familiar) → stay stable
+        base_rate = self.extraction_rules["base_self_modification_rate"]
+        modification_rate = base_rate * (1.0 + relative_impact)
+        self.extraction_rules["self_modification_rate"] = modification_rate
 
         # Analyze which components are most aligned with context
         L_alignment = abs(np.dot(L, M_context))
@@ -352,6 +371,22 @@ class RecursiveEigenAI:
             print(f"ITERATION {self.iteration}: '{text}'")
             print(f"{'='*70}\n")
 
+        # Compute relative impact if context accumulator provided
+        relative_impact = 1.0
+        novelty_score = 1.0
+        if self.context_accumulator is not None and np.linalg.norm(self.M_context) > 1e-6:
+            relative_impact = self.context_accumulator.compute_relative_impact(self.M_context)
+            novelty_score = self.context_accumulator.compute_novelty_score(self.M_context)
+
+            if verbose:
+                print(f"Relative Information Impact:")
+                print(f"  Context density: {self.context_accumulator.get_context_density()}")
+                print(f"  Novelty: {novelty_score:.4f}")
+                print(f"  Relative impact: {relative_impact:.4f}")
+                print()
+
+        self.impact_history.append(relative_impact)
+
         # Extract (L,R,V) using current M_context
         if np.linalg.norm(self.M_context) < 1e-6:
             # First input: no context yet
@@ -382,12 +417,15 @@ class RecursiveEigenAI:
             print(f"  M_context alignment: {alignment:.3f}")
             print(f"  M_new: {M_new[:5]}... (norm: {np.linalg.norm(M_new):.3f})")
 
-        # Self-modify extraction rules
+        # Self-modify extraction rules (modulated by relative impact)
         old_rules = self.extraction_rules.copy()
-        self.self_modify_rules(L, R, V, self.M_context)
+        self.self_modify_rules(L, R, V, self.M_context, relative_impact=relative_impact)
 
         if verbose:
-            print(f"\nSelf-modification:")
+            print(f"\nSelf-modification (impact-modulated):")
+            print(
+                f"  self_modification_rate: {old_rules.get('self_modification_rate', 0.1):.3f} → {self.extraction_rules['self_modification_rate']:.3f}"
+            )
             print(
                 f"  L_weight: {old_rules['L_weight']:.3f} → {self.extraction_rules['L_weight']:.3f}"
             )
@@ -406,6 +444,17 @@ class RecursiveEigenAI:
         self.M_context = M_new
         self.M_history.append(self.M_context.copy())
         self.extraction_history.append(self.extraction_rules.copy())
+
+        # Add to context accumulator if provided
+        if self.context_accumulator is not None:
+            self.context_accumulator.add_context(
+                self.M_context,
+                metadata={
+                    "text": text,
+                    "iteration": self.iteration,
+                    "eigenstate": self.eigenstate_reached
+                }
+            )
 
         # Detect meta-eigenstate
         self.eigenstate_reached = self.detect_meta_eigenstate()
@@ -426,6 +475,8 @@ class RecursiveEigenAI:
             "L": L,
             "R": R,
             "V": V,
+            "relative_impact": relative_impact,
+            "novelty_score": novelty_score,
         }
 
     def query(self, text: str, verbose: bool = False) -> str:
@@ -489,7 +540,7 @@ class RecursiveEigenAI:
 
     def get_state_summary(self) -> Dict:
         """Get summary of AI's current state"""
-        return {
+        summary = {
             "iteration": self.iteration,
             "eigenstate_reached": self.eigenstate_reached,
             "M_context_norm": np.linalg.norm(self.M_context),
@@ -497,6 +548,22 @@ class RecursiveEigenAI:
             "inputs_processed": len(self.input_history),
             "trajectory_length": len(self.M_history),
         }
+
+        # Add context accumulation statistics if available
+        if self.context_accumulator is not None:
+            acc_stats = self.context_accumulator.get_statistics()
+            summary["context_stats"] = acc_stats
+
+        # Add impact history statistics
+        if len(self.impact_history) > 0:
+            summary["avg_impact"] = np.mean(self.impact_history)
+            summary["recent_impact"] = np.mean(self.impact_history[-5:]) if len(self.impact_history) >= 5 else np.mean(self.impact_history)
+            summary["impact_trend"] = (
+                np.polyfit(range(len(self.impact_history)), self.impact_history, 1)[0]
+                if len(self.impact_history) >= 2 else 0.0
+            )
+
+        return summary
 
 
 if __name__ == "__main__":

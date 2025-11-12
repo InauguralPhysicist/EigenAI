@@ -27,6 +27,12 @@ from .eigen_recursive_ai import (
     RecursiveState,
 )
 
+# Context accumulation
+from .eigen_context_accumulator import (
+    ContextAccumulator,
+    ContextEntry,
+)
+
 # Discrete tokenization
 from .eigen_discrete_tokenizer import (
     DiscreteToken,
@@ -67,6 +73,8 @@ __all__ = [
     "SemanticTriad",
     "RecursiveEigenAI",
     "RecursiveState",
+    "ContextAccumulator",
+    "ContextEntry",
     "DiscreteToken",
     # Main functions
     "understanding_loop",

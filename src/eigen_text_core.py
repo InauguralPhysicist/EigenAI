@@ -819,6 +819,7 @@ def understanding_loop(
     learning_rate: float = 0.1,
     entropy_weighted: bool = False,
     word_freq_model: dict = None,
+    context_accumulator = None,
     verbose: bool = False,
 ) -> Tuple[np.ndarray, List[np.ndarray], Dict]:
     """
@@ -850,6 +851,11 @@ def understanding_loop(
     word_freq_model : dict, optional
         Word → frequency mapping for entropy calculation
         If None and entropy_weighted=True, uses character-based entropy
+    context_accumulator : ContextAccumulator, optional
+        If provided, uses relative information impact to modulate learning
+        rate based on accumulated context. First time seeing a concept →
+        high impact/fast learning. Familiar concept → low impact/stable.
+        This implements: Impact = novelty / log(context_density + 1)
     verbose : bool
         Print iteration details
 
@@ -891,6 +897,29 @@ def understanding_loop(
         )
     else:
         triad = extract_LRV_from_sentence(text)
+
+    # Compute relative impact if context accumulator provided
+    relative_impact = 1.0
+    novelty_score = 1.0
+    if context_accumulator is not None:
+        # Create initial semantic vector for impact computation
+        initial_M = (triad.L + triad.R + triad.V) / 3.0
+        initial_M = initial_M / (np.linalg.norm(initial_M) + 1e-10)
+
+        relative_impact = context_accumulator.compute_relative_impact(initial_M)
+        novelty_score = context_accumulator.compute_novelty_score(initial_M)
+
+        if verbose:
+            print(f"\nContext-aware processing:")
+            print(f"  Context density: {context_accumulator.get_context_density()}")
+            print(f"  Novelty: {novelty_score:.4f}")
+            print(f"  Relative impact: {relative_impact:.4f}")
+            print(f"  Adjusted learning rate: {learning_rate * (1 + relative_impact):.4f}")
+
+    # Modulate learning rate based on relative impact
+    # High impact → faster learning (novel concept)
+    # Low impact → slower learning (familiar concept)
+    effective_learning_rate = learning_rate * (1.0 + relative_impact)
 
     # Calculate initial orthogonality (geometric quality measure)
     LR_dot = float(np.dot(triad.L, triad.R))
@@ -954,10 +983,11 @@ def understanding_loop(
         # This simulates deeper semantic processing
         # Analogous to gradient descent in robot control
 
-        # Project M back onto L, R, V with learning rate
-        L_correction = learning_rate * (M - L) * np.exp(-iteration / max_iterations)
-        R_correction = learning_rate * (M - R) * np.exp(-iteration / max_iterations)
-        V_correction = learning_rate * (M - V) * np.exp(-iteration / max_iterations)
+        # Project M back onto L, R, V with effective learning rate
+        # (modulated by relative impact if context accumulator provided)
+        L_correction = effective_learning_rate * (M - L) * np.exp(-iteration / max_iterations)
+        R_correction = effective_learning_rate * (M - R) * np.exp(-iteration / max_iterations)
+        V_correction = effective_learning_rate * (M - V) * np.exp(-iteration / max_iterations)
 
         L = L + L_correction
         R = R + R_correction
@@ -993,6 +1023,18 @@ def understanding_loop(
                 angle = np.arccos(cos_angle)
                 curvature += float(angle)
 
+    # Add final M to context accumulator if provided
+    if context_accumulator is not None:
+        context_accumulator.add_context(
+            M_history[-1],
+            metadata={
+                "text": text,
+                "iterations": len(M_history),
+                "converged": converged,
+                "eigenstate_type": "periodic" if period else "fixed-point" if converged else "none"
+            }
+        )
+
     metrics = {
         "iterations": len(M_history),
         "converged": converged,
@@ -1011,6 +1053,10 @@ def understanding_loop(
         "arc_length": arc_length,  # Total path length (semantic vagueness)
         "curvature": curvature,  # Sum of bends (conceptual ambiguity)
         "orthogonality": initial_orthogonality,  # L-R-V quality (0=perfect, higher=worse)
+        # Context accumulation metrics (relative information impact)
+        "relative_impact": relative_impact,  # How impactful was this text
+        "novelty_score": novelty_score,  # How novel compared to accumulated context
+        "effective_learning_rate": effective_learning_rate,  # Adjusted learning rate
     }
 
     return M_history[-1], M_history, metrics

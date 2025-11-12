@@ -40,6 +40,9 @@ cd EigenAI
 # See recursive self-modifying AI in action
 python examples/recursive_ai_demo.py
 
+# Context accumulation - relative information impact
+python examples/context_accumulation_demo.py
+
 # Test universal eigenstate pattern across physics
 python examples/test_universal_pattern.py
 
@@ -298,7 +301,50 @@ print(f"Universality: {metrics['light_like_frames']}/8 frames")
 # 0.7-1.0: Genuine comprehension
 ```
 
-### 4. Universal Pattern Validation
+### 4. Context Accumulation - Relative Information Impact
+
+**NEW**: Implements the insight that experience intensity scales inversely with accumulated context.
+
+```python
+from src.eigen_context_accumulator import ContextAccumulator
+from src.eigen_text_core import understanding_loop
+
+# Create context accumulator
+acc = ContextAccumulator()
+
+# First concept - high impact (novel)
+M1, _, metrics1 = understanding_loop(
+    "The wind bends the tree",
+    context_accumulator=acc
+)
+print(f"Impact: {metrics1['relative_impact']:.3f}")  # ~1.0 (high)
+
+# Similar concept - lower impact (familiar)
+M2, _, metrics2 = understanding_loop(
+    "The breeze moves the branch",
+    context_accumulator=acc
+)
+print(f"Impact: {metrics2['relative_impact']:.3f}")  # ~0.2 (lower)
+
+# Novel concept - high impact despite dense context
+M3, _, metrics3 = understanding_loop(
+    "Quantum entanglement defies locality",
+    context_accumulator=acc
+)
+print(f"Impact: {metrics3['relative_impact']:.3f}")  # ~0.8 (high again!)
+```
+
+**Key Applications**:
+- **Adaptive Learning**: Learning rate modulates based on novelty
+- **Novelty Detection**: Distinguishes genuine new information from repetition
+- **Paradigm Shifts**: Detects phase transitions in understanding
+- **Human Parallels**: Explains why first experiences are more intense
+
+**Formula**: `Impact = novelty / log(context_density + 1)`
+
+See `examples/context_accumulation_demo.py` for full demonstration.
+
+### 5. Universal Pattern Validation
 
 ```python
 # All physical domains use same eigenstate pattern
