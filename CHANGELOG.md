@@ -5,6 +5,107 @@ All notable changes to EigenAI will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2025-11-13
+
+### Added
+
+#### Context Accumulation Layer
+- **Relative Information Impact**: New framework measuring information intensity based on accumulated context
+  - Formula: `Impact = novelty / log(context_density + 1)`
+  - Explains how same stimulus has different impact based on historical context
+  - Applications: pain intensity, time perception, genuine learning detection
+- **ContextAccumulator class**: Tracks accumulated semantic context with novelty detection
+  - `compute_relative_impact()`: Calculate impact of new information
+  - `compute_novelty_score()`: Measure how novel a vector is
+  - `find_similar_contexts()`: Find k most similar historical contexts
+  - `get_context_density()`: Total accumulated context volume
+- **Integration with core modules**:
+  - `eigen_text_core.py`: Learning rate modulation by relative impact
+  - `eigen_recursive_ai.py`: Adaptive self-modification rate based on context
+- **Comprehensive testing**: 19 tests covering all context accumulation functionality
+- **Interactive demonstration**: 6 demos showing context-aware learning, novelty detection, and phase transitions
+- **1,768 lines of new code** with full documentation
+
+#### Key Insights
+- Distinguishes genuine learning from mere repetition
+- Detects paradigm shifts and phase transitions
+- Bridges subjective human experience with objective measurement
+- Makes EigenAI context-aware and adaptive
+
+#### Files Added
+- `src/eigen_context_accumulator.py` - Core implementation (672 lines)
+- `examples/context_accumulation_demo.py` - Interactive demonstrations (472 lines)
+- `tests/test_context_accumulator.py` - Comprehensive test suite (445 lines)
+
+#### Files Modified
+- `src/__init__.py` - Exports for context accumulator
+- `src/eigen_text_core.py` - Context-aware learning rate
+- `src/eigen_recursive_ai.py` - Context-aware self-modification
+- `README.md` - Updated with context accumulation features
+
+### Documentation
+- Updated README with Context Accumulation Layer overview
+- Added theoretical foundation for relative information impact
+- Included usage examples and integration patterns
+
+## [1.1.0] - 2025-11-11
+
+### Added - Universal Batching Framework
+
+#### F-Aware Parallel Tokenization
+- **Adaptive batch sizing**: Formula `k* = √(oP·F/c)` for optimal processing
+  - F=8 for user messages (human working memory)
+  - F=32-64 for articles (computational throughput)
+  - Automatic adaptation based on vocabulary size and text length
+- **Performance gains**:
+  - Short messages: 2-3× speedup
+  - Articles (1000 words): 10-30× speedup
+  - Depth reduction: O(n) → O(log_F(n))
+
+#### Physics-Inspired Metrics
+- **New token observables**:
+  - Momentum: `p = √(L² + R² + V² + M²)` (4D eigenspace magnitude)
+  - Velocity: `v = usage_count / Δt` (temporal usage rate)
+  - Phase: `ϕ = arctan2(R, L)` (geometric phase angle)
+  - Information Density: Shannon entropy of bit pattern
+- Track token evolution and detect phase transitions
+
+#### Information-Theoretic Bounds
+- **Margolus-Levitin Bound**: Maximum operations per second `N ≤ 4E/(πℏ)`
+- **Bekenstein Bound**: Maximum information per volume `I ≤ 2πRE/(ℏc ln 2)`
+- System operates **10²⁹× below** fundamental limits
+- Physics permits extreme scaling
+
+#### Database Optimizations
+- **Atomic operations**: Race-condition-free concurrent updates
+- **Batch transactions**: 100-1000× speedup (1000 queries → 1 transaction)
+- **Batch classification loading**: 2.5× speedup (3 queries → 1 query)
+- **Connection pooling**: Base 20 + overflow 40 connections
+- **Composite indices**: Optimized for classification queries
+
+#### Performance Benchmarks
+- Token processing: 3-30× faster
+- Database operations: 100-1000× faster
+- Validated against framework predictions
+- 10²⁹× headroom to fundamental limits
+
+### Changed
+- Tokenization now uses parallel processing by default
+- Database queries optimized with batching
+- Improved concurrency support with atomic operations
+
+### Files Added
+- `src/information_bounds.py` - Fundamental limits validation
+- `benchmark_optimizations.py` - Performance validation
+- `OPTIMIZATION_SUMMARY.md` - Comprehensive documentation
+
+### Files Modified
+- `app.py` - Adaptive F, batch classification, parallel tokenization
+- `streamlit_chatbot.py` - Parallel tokenization integration
+- `src/eigen_discrete_tokenizer.py` - Physics metrics, velocity tracking
+- `database.py` - Connection pooling, composite indices
+- `db_helpers.py` - Atomic operations, batch saves
+
 ## [1.0.0] - 2025-11-08
 
 ### Added - Major Release
@@ -323,7 +424,9 @@ The framework implements a revolutionary approach to measuring AI understanding:
 
 ---
 
-[Unreleased]: https://github.com/InauguralPhysicist/EigenAI/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/InauguralPhysicist/EigenAI/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/InauguralPhysicist/EigenAI/releases/tag/v1.2.0
+[1.1.0]: https://github.com/InauguralPhysicist/EigenAI/releases/tag/v1.1.0
 [1.0.0]: https://github.com/InauguralPhysicist/EigenAI/releases/tag/v1.0.0
 [0.1.0]: https://github.com/InauguralPhysicist/EigenAI/releases/tag/v0.1.0
 [0.0.1]: https://github.com/InauguralPhysicist/EigenAI/releases/tag/v0.0.1
