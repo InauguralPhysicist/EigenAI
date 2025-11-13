@@ -12,7 +12,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="eigenai",
-    version="1.0.0",
+    version="1.2.0",
     author="Jon McReynolds",
     author_email="mcreynolds.jon@gmail.com",
     description="Measure AI understanding through geometric eigenstate detection",
