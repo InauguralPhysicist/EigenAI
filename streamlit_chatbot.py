@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 """
-EigenAI Interactive Chatbot - v1.0.0
+EigenAI Interactive Chatbot - v1.2.0
 
 Chat with a recursive self-modifying AI that builds understanding through eigenstate detection.
 Watch in real-time as the AI's processing framework evolves during conversation.
+
+New in v1.2.0: Context Accumulation Layer with novelty detection
+New in v1.1.0: F-aware parallel tokenization (3-30× speedup)
 """
 
 import streamlit as st
@@ -185,7 +188,7 @@ with col_settings[1]:
     entropy_mode = st.toggle(
         "✨ Entropy Weighting",
         value=False,
-        help="v1.0.0 feature: Weight semantics by information density (14.6× better orthogonality)"
+        help="Weight semantics by information density (14.6× better orthogonality)"
     )
 
 if "ai" not in st.session_state:
@@ -331,7 +334,7 @@ with col1:
                             st.caption(f"{icon} {classification} | Usage: {token.usage_count} | T:{ratios['time-like']:.2f} S:{ratios['space-like']:.2f} L:{ratios['light-like']:.2f}")
 
                     if m.get("entropy_weighted"):
-                        st.caption("✨ Processed with entropy weighting (v1.0.0)")
+                        st.caption("✨ Processed with entropy weighting")
 
     prompt = st.chat_input("Type your message here...")
 
@@ -471,7 +474,7 @@ with col2:
         if unknown > 0:
             st.caption(f"❓ Unknown (learning): {unknown}")
 
-st.sidebar.title("About EigenAI v1.0.0")
+st.sidebar.title("About EigenAI v1.2.0")
 st.sidebar.markdown("""
 ### What is This?
 
@@ -500,7 +503,19 @@ From transition metric ds² = S² - C²:
 **Recursive Self-Modification**:
 The AI changes its own processing framework based on what it learns, building genuine comprehension over time.
 
-### New in v1.0.0
+### New in v1.2.0
+
+🧠 **Context Accumulation**: Track accumulated context and measure relative information impact
+🔍 **Novelty Detection**: Distinguish genuine learning from mere repetition
+🎯 **Paradigm Shifts**: Detect phase transitions in understanding
+
+### New in v1.1.0
+
+⚡ **F-Aware Parallelization**: 3-30× speedup for token processing
+🔬 **Physics Metrics**: Momentum, velocity, phase tracking
+🗄️ **Database Optimization**: 100-1000× speedup for batch operations
+
+### Established in v1.0.0
 
 ✨ **Entropy Weighting**: Weight semantic components by information density for 14.6× better orthogonality
 

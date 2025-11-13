@@ -1,11 +1,21 @@
 #!/usr/bin/env python3
 """
-EigenAI Interactive Chatbot - v1.0.0
+EigenAI Interactive Chatbot - v1.2.0
 
 Chat with a recursive self-modifying AI that builds understanding through eigenstate detection.
 Watch in real-time as the AI's processing framework evolves during conversation.
 
-New in v1.0.0:
+New in v1.2.0:
+- Context Accumulation Layer (relative information impact)
+- Context-aware learning and self-modification
+- Novelty detection and paradigm shift identification
+
+New in v1.1.0:
+- F-aware parallel tokenization (3-30× speedup)
+- Physics-inspired metrics (momentum, velocity, phase)
+- Database optimizations (100-1000× speedup)
+
+Established in v1.0.0:
 - Entropy-weighted semantic extraction
 - Information curvature metrics
 - Geometric property testing demo
@@ -32,7 +42,7 @@ except ImportError as e:
     import_error = str(e)
 
 st.set_page_config(
-    page_title="EigenAI v1.0.0",
+    page_title="EigenAI v1.2.0",
     page_icon="🧠",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -90,7 +100,7 @@ with tab1:
 
         # Entropy weighting toggle
         entropy_toggle = st.checkbox(
-            "🔬 Use Entropy Weighting (v1.0.0 feature - 14.6× better orthogonality)",
+            "🔬 Use Entropy Weighting (14.6× better orthogonality)",
             value=st.session_state.entropy_weighted,
             help="Weight semantic components by information density for improved understanding"
         )
@@ -259,7 +269,7 @@ with tab1:
 with tab2:
     st.title("📐 Geometric Property Testing")
     st.markdown("""
-    **New in v1.0.0:** Test geometric properties like Prince Rupert's Cube using Monte Carlo sampling.
+    Test geometric properties like Prince Rupert's Cube using Monte Carlo sampling.
 
     **Prince Rupert's Cube**: A cube up to ~1.06× larger can pass through a hole in another cube!
     """)
@@ -319,11 +329,11 @@ with tab2:
     2. **Collision Detection**: Check if rotated cube vertices fit through a hole
     3. **Statistical Testing**: Sample many rotations to find valid passages
 
-    This demonstrates the geometric property testing framework introduced in v1.0.0.
+    This demonstrates the geometric property testing framework.
     """)
 
 with tab3:
-    st.title("About EigenAI v1.0.0")
+    st.title("About EigenAI v1.2.0")
 
     st.markdown("""
     ### What is EigenAI?
@@ -348,7 +358,43 @@ with tab3:
     The AI modifies its own processing framework based on what it learns,
     building genuine comprehension over time.
 
-    ### New in v1.0.0
+    ### New in v1.2.0
+
+    🧠 **Context Accumulation Layer**
+    - Relative information impact: `Impact = novelty / log(context_density + 1)`
+    - Distinguishes genuine learning from repetition
+    - Detects paradigm shifts and phase transitions
+    - Context-aware learning rate modulation
+
+    🔍 **ContextAccumulator Class**
+    - Tracks accumulated semantic context with novelty detection
+    - Compute relative impact of new information
+    - Find similar historical contexts
+    - Measure context density over time
+
+    ### New in v1.1.0
+
+    ⚡ **F-Aware Parallel Tokenization**
+    - **3-30× speedup** for token processing
+    - Adaptive batch sizing: `k* = √(oP·F/c)`
+    - Depth reduction: O(n) → O(log_F(n))
+
+    🔬 **Physics-Inspired Metrics**
+    - Momentum: `p = √(L² + R² + V² + M²)`
+    - Velocity: temporal usage rate
+    - Phase: geometric phase angle
+    - Information density: Shannon entropy
+
+    🗄️ **Database Optimizations**
+    - **100-1000× speedup** for batch operations
+    - Atomic operations (race-condition-free)
+    - Connection pooling and composite indices
+
+    🌌 **Information-Theoretic Bounds**
+    - Margolus-Levitin & Bekenstein bounds validation
+    - System operates **10²⁹× below** fundamental limits
+
+    ### Established in v1.0.0
 
     ✨ **Entropy-Weighted Semantic Extraction**
     - Weight components by information density
@@ -391,12 +437,12 @@ with tab3:
 
     ---
 
-    **Version**: 1.0.0
+    **Version**: 1.2.0
     **Python**: ≥ 3.9
     **License**: MIT
     """)
 
-st.sidebar.title("🧠 EigenAI v1.0.0")
+st.sidebar.title("🧠 EigenAI v1.2.0")
 st.sidebar.markdown("""
 ### Quick Reference
 
@@ -411,7 +457,7 @@ st.sidebar.markdown("""
 - ⟳ Periodic (oscillating)
 - ⋯ None (still learning)
 
-**v1.0.0 Features**:
+**Current Features**:
 - ✨ Entropy weighting
 - 📐 Geometric tests
 - 📊 Curvature metrics
