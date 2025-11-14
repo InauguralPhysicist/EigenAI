@@ -31,7 +31,6 @@ Regime Interpretation:
 - Space-like: Exploring, semantic (ds² < 0)
 """
 
-import numpy as np
 from typing import Dict, Tuple, Optional, List
 from dataclasses import dataclass
 

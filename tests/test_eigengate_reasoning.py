@@ -30,7 +30,7 @@ class TestEigengateQ25:
 
     def test_eigengate_balanced_asymmetric_AB(self):
         """Test balanced state via A-B asymmetry"""
-        state = eigengate_Q25(A=1, B=0, D=0, C=0)
+        state = eigengate_Q25(A=1, B=0, D=0, C=1)  # Changed C to 1 so D≠C (no DC symmetry)
         assert state.Q == 1
         assert state.is_balanced()
         assert state.has_AB_asymmetry()
