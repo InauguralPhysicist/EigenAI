@@ -264,6 +264,90 @@ class DiscreteToken:
             'usage_count': self.usage_count
         }
 
+    def compute_eigengate_balance(self, threshold: int = 128) -> Tuple[bool, Dict[str, str]]:
+        """
+        Compute Eigengate Q25 balance for this token's semantic state
+
+        Uses Eigengate logic: Q = (A ⊕ B) ∨ (D ⊙ C)
+        - A = binarize(L), B = binarize(R)
+        - D = binarize(V), C = binarize(M)
+
+        Parameters
+        ----------
+        threshold : int, optional
+            Binarization threshold (default: 128)
+
+        Returns
+        -------
+        Tuple[bool, Dict[str, str]]
+            (is_balanced, 5w1h_analysis)
+
+        Examples
+        --------
+        >>> token = DiscreteToken(L=200, R=50, V=180, M=200, word="quantum")
+        >>> balanced, analysis = token.compute_eigengate_balance()
+        >>> balanced
+        True
+        >>> print(analysis['what'])
+        'System exhibits balanced state'
+        """
+        from .eigen_gate_reasoning import resolve_oscillation
+        return resolve_oscillation(self.L, self.R, self.V, self.M, threshold)
+
+    def generate_5w1h_analysis(self, threshold: int = 128) -> Dict[str, str]:
+        """
+        Generate 5W1H (Who, What, When, Where, Why, How) analysis from token state
+
+        Parameters
+        ----------
+        threshold : int, optional
+            Binarization threshold for eigengate (default: 128)
+
+        Returns
+        -------
+        Dict[str, str]
+            5W1H analysis with keys: what, who, when, where, why, how
+
+        Examples
+        --------
+        >>> token = DiscreteToken(L=200, R=50, V=180, M=200, word="quantum")
+        >>> analysis = token.generate_5w1h_analysis()
+        >>> print(analysis['what'])
+        'System exhibits balanced state'
+        >>> print(analysis['why'])
+        'Asymmetry in A-B satisfies equilibrium condition'
+        """
+        _, analysis = self.compute_eigengate_balance(threshold)
+        return analysis
+
+    def resolve_oscillation_eigengate(self, threshold: int = 128) -> str:
+        """
+        Use Eigengate Q as light-like resolver for this token's oscillations
+
+        Parameters
+        ----------
+        threshold : int, optional
+            Binarization threshold (default: 128)
+
+        Returns
+        -------
+        str
+            Regime classification: 'light-like' (resolved) or 'oscillating' (unresolved)
+
+        Examples
+        --------
+        >>> token = DiscreteToken(L=200, R=50, V=180, M=200, word="quantum")
+        >>> regime = token.resolve_oscillation_eigengate()
+        >>> regime
+        'light-like'
+        """
+        from .eigen_gate_reasoning import semantic_to_eigengate, eigengate_Q25, classify_regime_eigengate
+
+        A, B, D, C = semantic_to_eigengate(self.L, self.R, self.V, self.M, threshold)
+        state = eigengate_Q25(A, B, D, C)
+
+        return classify_regime_eigengate(state)
+
 
 def hash_to_byte(text: str, seed: int = 0) -> int:
     """
