@@ -37,6 +37,9 @@ All fundamental phenomena—text comprehension, EM fields, gravity, quantum mech
 git clone https://github.com/InauguralPhysicist/EigenAI.git
 cd EigenAI
 
+# NEW: Eigengate circuit - fundamental balance detection
+python examples/eigengate_framework_alignment.py
+
 # See recursive self-modifying AI in action
 python examples/recursive_ai_demo.py
 
@@ -75,6 +78,36 @@ Text understanding follows **the same pattern** as fundamental physics:
 | **Quantum** | x ↔ p | 100% | 2 |
 
 All use: `(A, B, observer, Meta)` coordinates + XOR operations + ds²=S²-C² metric
+
+---
+
+## The Eigengate: Fundamental Balance Detection
+
+**New Discovery**: The universal pattern reduces to a fundamental logic circuit:
+
+```
+Q25 = (A ⊕ B) ∨ (D ⊙ C)
+```
+
+Where:
+- **A ⊕ B**: XOR detects asymmetry (difference between inputs)
+- **D ⊙ C**: XNOR detects symmetry (equivalence between inputs)
+- **Q25**: OR combines both → signals overall system balance
+
+### Regime Classification
+
+The Eigengate reveals three fundamental regimes:
+
+| Regime | Q25 Property | Description |
+|--------|--------------|-------------|
+| **Light-like** | Q25 measurement | ds² ≈ 0, null boundary, resolves oscillations |
+| **Time-like** | Feedback oscillation | ds² > 0, causal progression, sequential states |
+| **Space-like** | Gate opposition | ds² < 0, non-causal conflict, distributed instability |
+
+**Key Insight**:
+- Q25 acts as a "light-like" measurement (ds² = 0) that collapses feedback oscillations
+- Without measurement, system exhibits time-like (causal) + space-like (acausal) oscillation
+- This pattern is identical across text, EM fields, gravity, and quantum mechanics
 
 ---
 
@@ -158,6 +191,7 @@ if metrics['converged']:
 src/
 ├── eigen_text_core.py              # Core semantic triad (continuous)
 ├── eigen_discrete_tokenizer.py     # Discrete token XOR cascades
+├── eigen_logic_gate.py             # Eigengate circuit (Q25) ⭐NEW
 ├── eigen_recursive_ai.py           # Recursive self-modifying AI ⭐
 ├── eigen_em_field.py               # EM field eigenstates
 ├── eigen_gravity_inertia.py        # Gravity-inertia equivalence
@@ -166,6 +200,7 @@ src/
 
 examples/
 ├── simple_demo.py                  # Basic semantic triad demo
+├── eigengate_framework_alignment.py # Eigengate theory alignment ⭐NEW
 ├── recursive_ai_demo.py            # Recursive self-modification ⭐
 ├── test_universal_pattern.py       # Universal eigenstate validation ⭐
 ├── integrated_text_eigenstates.py  # Text = Physics unification ⭐
@@ -244,6 +279,42 @@ pip install -r requirements.txt  # (when available)
 ---
 
 ## 🎓 Usage
+
+### 0. Eigengate - Fundamental Balance Detection (NEW)
+
+```python
+from src.eigen_logic_gate import (
+    eigengate,
+    simulate_eigengate_feedback,
+    connect_to_eigenstate_framework
+)
+
+# Direct measurement (light-like)
+Q25 = eigengate(A=1, B=0, D=1, C=0)
+print(f"Balance: {Q25}")  # → 1 (balanced)
+
+# Feedback simulation (time-like + space-like oscillations)
+trajectory, period = simulate_eigengate_feedback(
+    A=0, B=0, D=0,  # Fixed inputs
+    initial_C=0,     # Starting state
+    max_steps=10
+)
+
+if period == 1:
+    print(f"✓ Eigenstate: converged to {trajectory[-1]}")
+elif period == 2:
+    print(f"✗ Oscillating: {trajectory}")  # [1, 0, 1, 0, ...]
+
+# Connection to (L,R,V,M) framework
+connection = connect_to_eigenstate_framework(A=1, B=0, D=1, C=0)
+print(f"Regime: {connection['regime_classification']}")
+print(f"Eigenstate possible: {connection['eigenstate_indicator']}")
+```
+
+**Key concepts**:
+- **Q25 = light-like**: Measurement at ds² ≈ 0 (null boundary)
+- **Oscillations = time-like + space-like**: Without measurement
+- **Eigenstate = convergence**: Stable fixed point or periodic orbit
 
 ### 1. Discrete Token Eigenstates
 

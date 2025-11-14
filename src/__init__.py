@@ -42,6 +42,18 @@ from .eigen_discrete_tokenizer import (
     detect_cycle_in_trajectory,
 )
 
+# Logic gate eigenstate detection
+from .eigen_logic_gate import (
+    LogicState,
+    eigengate,
+    eigengate_with_components,
+    simulate_eigengate_feedback,
+    XOR,
+    XNOR,
+    OR,
+    connect_to_eigenstate_framework,
+)
+
 # Geometric property tests
 from .eigen_geometric_tests import (
     check_rupert_property,
@@ -76,6 +88,7 @@ __all__ = [
     "ContextAccumulator",
     "ContextEntry",
     "DiscreteToken",
+    "LogicState",
     # Main functions
     "understanding_loop",
     "process_sentence_discrete",
@@ -91,6 +104,14 @@ __all__ = [
     "tokenize_word",
     "detect_cycle_in_trajectory",
     "SPACY_AVAILABLE",
+    # Logic gate functions
+    "eigengate",
+    "eigengate_with_components",
+    "simulate_eigengate_feedback",
+    "XOR",
+    "XNOR",
+    "OR",
+    "connect_to_eigenstate_framework",
     # Geometric tests
     "check_rupert_property",
     "create_unit_cube",
