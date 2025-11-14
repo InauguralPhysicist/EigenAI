@@ -61,6 +61,18 @@ from .eigen_geometric_tests import (
     create_cube,
 )
 
+# Eigengate reasoning (deterministic semantic analysis)
+from .eigen_gate_reasoning import (
+    eigengate_Q25,
+    EigengateState,
+    semantic_to_eigengate,
+    analyze_balance,
+    resolve_oscillation,
+    classify_regime_eigengate,
+    generate_truth_table,
+    print_truth_table,
+)
+
 # Domain-specific modules (optional imports)
 try:
     from .eigen_em_field import analyze_em_field
@@ -116,6 +128,15 @@ __all__ = [
     "check_rupert_property",
     "create_unit_cube",
     "create_cube",
+    # Eigengate reasoning
+    "eigengate_Q25",
+    "EigengateState",
+    "semantic_to_eigengate",
+    "analyze_balance",
+    "resolve_oscillation",
+    "classify_regime_eigengate",
+    "generate_truth_table",
+    "print_truth_table",
     # Domain-specific
     "analyze_em_field",
     "geodesic_trajectory",
